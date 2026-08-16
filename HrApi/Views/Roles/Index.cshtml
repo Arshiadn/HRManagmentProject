@@ -1,0 +1,69 @@
+﻿@model IEnumerable<IdentityRole>
+
+@{
+    ViewData["Title"] = "Roles";
+}
+
+<h2>Roles</h2>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="text-danger">
+        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <div>@error.ErrorMessage</div>
+        }
+    </div>
+}
+
+<hr />
+
+@if (Model != null && Model.Any())
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Normalized Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var role in Model)
+            {
+                <tr>
+                    <td>@role.Id</td>
+                    <td>@role.Name</td>
+                    <td>@role.NormalizedName</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No roles created yet.</p>
+}
+
+<h4>Create Role</h4>
+<form asp-action="Create" method="post" class="mb-3">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div>
+        <label for="rolename">Role Name</label>
+        <input type="text" id="rolename" name="rolename" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Create Role</button>
+</form>
+<br />
+
+@* <h4>Assign Role To User</h4>
+<form asp-action="AssignRole" method="post" class="mb-3">
+    <div>
+        <label for="userid">User Id</label>
+        <input type="text" id="userid" name="userid" class="form-control" />
+        <label for="rolename">Role Name</label>
+        <input type="text" id="rolename" name="rolename" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Assign Role</button>
+</form> *@
+

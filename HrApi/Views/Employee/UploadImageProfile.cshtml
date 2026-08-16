@@ -1,0 +1,39 @@
+﻿@model EmployeeProfileImageViewModel
+@{
+    ViewData["Title"] = "Employee Upload Profile Image Form";
+}
+<div class="container mt-4">
+    <h2>Upload Profile Image</h2>
+
+    <form asp-action="UploadImageProfile"
+          method="post"
+          enctype="multipart/form-data">
+
+        <input type="hidden" asp-for="EmployeeId" />
+
+        <div class="mb-3">
+            <label asp-for="ProfileImage" class="form-label"></label>
+            <input asp-for="ProfileImage"
+                   type="file"
+                   class="form-control" />
+            <span asp-validation-for="ProfileImage"
+                  class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Upload
+        </button>
+
+        <a asp-action="Index"
+           class="btn btn-secondary">
+            Cancel-Go to Index
+        </a>
+
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

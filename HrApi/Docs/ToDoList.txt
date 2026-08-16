@@ -1,0 +1,7 @@
+﻿To-Do-List : 
+
+1: ask about jwt authorization in api controllers (done)
+2: user github copilot and ask: Give me a checklist of problems, but do not rewrite the whole project.
+3: add personnelCode property to CreateEmployeeDto and create service and view and createApi(and updateapi)
+4: search about diffrence of [FromQuery], [FromBody], [FromForm]
+5: جایگزینی custome exception ها در سرویس و try/catch ها و کنترلر ها

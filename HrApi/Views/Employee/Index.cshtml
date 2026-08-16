@@ -1,0 +1,45 @@
+﻿@model List<EmployeeListDto>
+@{
+    ViewData["Title"] = "Employee List";
+    var successMessage = TempData["SuccessMessage"] as string;
+}
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-success">
+        <partial name="_Alert" model="successMessage" />
+    </div>
+}
+<table class="table table-bordered table-striped">
+    <thead class="table-light">
+        <tr>
+            <th>Id</th>
+            <th>FullName</th>
+            <th>Department Name</th>
+            <th>Operations</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Any())
+        {
+            foreach (var emp in Model)
+            {
+                <tr>
+                    <td>@emp.Id</td>
+                    <td>@emp.FullName</td>
+                    <td>@emp.DepartmentName</td>
+                    <td>
+                        <a asp-controller="Employee" asp-action="UploadImageProfile" asp-route-id="@emp.Id" class="btn btn-sm btn-info">Upload Profile Picture</a>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="5" class="text-center text-muted">
+                    there is no employee :(
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

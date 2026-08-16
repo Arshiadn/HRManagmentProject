@@ -1,0 +1,55 @@
+﻿@model List<UserInfoViewModel>
+@{
+    ViewData["Title"] = "User Management";
+}
+<h2>User Management</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Fullname</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Activity status</th>
+            <th>Operations</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.UserName</td>
+                <td>@user.FullName</td>
+                <td>@user.Email</td>
+                <td>
+                    @if (user.Roles != null && user.Roles.Any())
+                    {
+                        @string.Join(" , ", user.Roles)
+                    }
+                    else
+                    {
+                        <span>No Role</span>
+                    }
+                </td>
+                <td>@user.IsActive</td>
+                <td>
+                    <form asp-action="Deactivate" asp-controller="Users" method="post" style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="userId" value="@user.Id" />
+                        <button type="submit" class="btn btn-sm btn-danger">Deactivate User</button>
+                    </form>
+                    |
+                    <form asp-action="Activate" asp-controller="Users" method="post" style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="userId" value="@user.Id" />
+                        <button type="submit" class="btn btn-sm btn-success">Activate User</button>
+                    </form>
+                    |
+                    <a asp-action="AssignRole" asp-controller="Users" asp-route-userId="@user.Id" class="btn btn-sm btn-info">Assign Role</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
