@@ -22,78 +22,70 @@ public class DepartmentApiController : ControllerBase
         _departmentService = departmentService;
     }
     [HttpGet]
-    public ActionResult<List<DepartmentListDto>> GetAll()
+    public async Task<ActionResult<IReadOnlyList<DepartmentListDto>>>
+    GetAll(CancellationToken cancellationToken)
     {
-        var result = _departmentService.GetAll();
+        var result =
+            await _departmentService
+                .GetAllAsync(cancellationToken);
+
         return Ok(result);
     }
-    [HttpGet("{id}")]
-    public ActionResult<ApiResponse<DepartmentDetailsDto>> GetById(int id)
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<DepartmentDetailsDto>>
+    GetById(
+        int id,
+        CancellationToken cancellationToken)
     {
-        var department = _departmentService.GetById(id);
+        var result =
+            await _departmentService
+                .GetByIdAsync(id, cancellationToken);
 
-        if (department == null)
-            return NotFound(new ApiErrorResponse
-            {
-                Message = "دپارتمان مورد نظر پیدا نشد"
-            });
-
-        return Ok(new ApiResponse<DepartmentDetailsDto>
-        {
-            Success = true,
-            Message = "اطلاعات دپارتمان دریافت شد",
-            Data = department
-        });
+        return Ok(result);
     }
     [HttpPost]
-    public ActionResult<DepartmentDetailsDto> Create([FromBody]CreateDepartmentDto model)
+    public async Task<ActionResult> Create(
+    CreateDepartmentDto request,
+    CancellationToken cancellationToken)
     {
-        try
-        {
-            var department = _departmentService.Create(model);
-            return CreatedAtAction(
+        var id =
+            await _departmentService
+                .CreateAsync(request, cancellationToken);
+
+        return CreatedAtAction(
             nameof(GetById),
-            new { id = department.Id },
-            department);
-        }
-        catch(InvalidOperationException ex)
-        {
-            return Conflict(new ApiErrorResponse
-            {
-                Message = ex.Message
-            });
-        }
+            new { id },
+            new { id });
     }
-    [HttpPut("{id}")]
-    public IActionResult Update(int id, UpdateDepartmentDto model)
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update(
+       int id,
+       UpdateDepartmentDto request,
+       CancellationToken cancellationToken)
     {
-        try
-        {
-            _departmentService.Update(id, model);
-            return NoContent(); 
-        }
-        catch(InvalidOperationException ex)
-        {
-            return NotFound(new ApiErrorResponse
-            {
-                Message = ex.Message
-            });
-        }
+        await _departmentService
+            .UpdateAsync(id, request, cancellationToken);
+
+        return NoContent();
     }
-    [HttpDelete("{id}")]
-    public IActionResult Delete(int id)
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(
+    int id,
+    CancellationToken cancellationToken)
     {
-        try
-        {
-            _departmentService.Delete(id);
-            return NoContent();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return NotFound(new ApiErrorResponse
-            {
-                Message = ex.Message
-            });
-        }
+        await _departmentService
+            .SoftDeleteAsync(id, cancellationToken);
+
+        return NoContent();
+    }
+    [HttpPost("{id:int}/restore")]
+    public async Task<IActionResult> Restore(
+    int id,
+    CancellationToken cancellationToken)
+    {
+        await _departmentService
+            .RestoreAsync(id, cancellationToken);
+
+        return NoContent();
     }
 }

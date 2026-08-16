@@ -5,7 +5,9 @@ using AutoMapper.QueryableExtensions;
 using HrApi.DTOs.Departments;
 using HrApi.Interfaces;
 using HrApi.Models;
+using HrApi.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel;
 
 public class DepartmentService : IDepartmentService
 {
@@ -15,53 +17,150 @@ public class DepartmentService : IDepartmentService
     {
         _context = context; _mapper = mapper;
     }
-    public List<DepartmentListDto> GetAll()
+    public async Task<IReadOnlyList<DepartmentListDto>> GetAllAsync(CancellationToken cancellationToken)
     {
-        return _context.Departments
-            .AsNoTracking()
-            .OrderBy(d => d.Name)
-            .ProjectTo<DepartmentListDto>(_mapper.ConfigurationProvider)
-            .ToList();
+        return await _context.Departments
+                .AsNoTracking()
+                .OrderBy(d => d.Name)
+                .Select(d => new DepartmentListDto
+                {
+                    Id = d.Id,
+                    Name = d.Name,
+                    IsActive = d.IsActive,
+                    EmployeeCount = d.Employees.Count()
+                })
+                .ToListAsync(cancellationToken);       
     }
-    public DepartmentDetailsDto? GetById(int id)
+    public async Task<DepartmentDetailsDto> GetByIdAsync(
+            int id,
+            CancellationToken cancellationToken)
     {
-        return _context.Departments
-            .AsNoTracking()
-            .Where(d => d.Id == id)
-            .ProjectTo<DepartmentDetailsDto>(_mapper.ConfigurationProvider)
-            .FirstOrDefault();
-    }
-    public DepartmentDetailsDto Create(CreateDepartmentDto model)
-    {
-        var nameExists = _context.Departments.Any(d =>  d.Name == model.Name);
-        if (nameExists)
+        var department = await _context.Departments
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        if(department is null)
         {
-            throw new InvalidOperationException("این دپارتمان ثبت شده است");
+            throw new NotFoundException($"Department with id {id} was not found.");
         }
-        var department = _mapper.Map<Department>(model);
-        _context.Departments.Add(department);
-        _context.SaveChanges();
+        
+        return _mapper.Map<DepartmentDetailsDto>(department); 
+    }
+    //dont need this for now(maybe later? or delete)
 
-        return _mapper.Map<DepartmentDetailsDto>(department);
-    }
-    public void Update(int id, UpdateDepartmentDto model)
+    //public async Task<Department> GetActiveDepartmentAsync(int departmentId,
+    //    CancellationToken cancellationToken)
+    //{
+    //    var department = await _context.Departments
+    //        .FirstOrDefaultAsync(
+    //            x => x.Id == departmentId && x.IsActive,
+    //                cancellationToken);
+
+    //    if (department is null)
+    //    {
+    //        throw new BadRequestException(
+    //            "The selected department is invalid or inactive.");
+    //    }
+
+    //    return department;
+    //}
+    public async Task<int> CreateAsync(
+            CreateDepartmentDto request,
+            CancellationToken cancellationToken)
     {
-        var department = _context.Departments.FirstOrDefault(d => d.Id == id);
-        if (department == null)
+        var normalizedName = request.Name.Trim();
+        var exists = await _context.Departments
+                    .AnyAsync(d => d.Name == normalizedName, cancellationToken);
+        if(exists)
         {
-            throw new InvalidOperationException("دپارتمان مورد نظر پیدا نشد");
+            throw new ConflictException("A department with this name already exists.");
         }
-        _mapper.Map(model, department);
-        _context.SaveChanges();
+
+        var department = new Department
+        {
+            Name = normalizedName,
+            Description = request.Description?.Trim(),
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.Departments.Add(department);
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return department.Id;
     }
-    public void Delete(int id)
+    public async Task UpdateAsync(
+    int id,
+    UpdateDepartmentDto request,
+    CancellationToken cancellationToken)
     {
-        var department = _context.Departments.FirstOrDefault(d => d.Id == id);
-        if (department == null)
+        var department = await _context.Departments
+                        .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        if(department is null)
         {
-            throw new InvalidOperationException("دپارتمان مورد نظر پیدا نشد");
+            throw new NotFoundException($"Department with id {id} was not found.");
         }
-        _context.Departments.Remove(department);
-        _context.SaveChanges();
+        var normalizedName = request.Name.Trim();
+        var duplicateExists = await _context.Departments
+                              .AnyAsync(d => d.Id != id &&
+                                    d.Name == normalizedName,
+                                    cancellationToken);
+        if(duplicateExists)
+        {
+            throw new ConflictException("Another department with this name already exists.");
+        }
+        department.Name = normalizedName;
+        department.Description = request.Description?.Trim();
+        department.IsActive = request.IsActive;
+        department.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+    public async Task SoftDeleteAsync(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        var department = await _context.Departments
+                        .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        if(department is null)
+        {
+            throw new NotFoundException(
+            $"Department with id {id} was not found.");
+        }
+
+        var hasEmployee = await _context.Employees
+            .AnyAsync(e => e.DepartmentId == id, cancellationToken);
+        if(hasEmployee)
+        {
+            throw new ConflictException(
+                "A department with employees cannot be deleted.");
+        }
+        department.IsDeleted = true;
+        department.IsActive = false;
+        department.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+    public async Task RestoreAsync(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        var department = await _context.Departments
+    .IgnoreQueryFilters()
+    .FirstOrDefaultAsync(
+        d => d.Id == id && d.IsDeleted,
+        cancellationToken);
+
+        if (department is null)
+        {
+            throw new NotFoundException(
+                "Deleted department was not found.");
+        }
+
+        department.IsDeleted = false;
+        department.IsActive = true;
+        department.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

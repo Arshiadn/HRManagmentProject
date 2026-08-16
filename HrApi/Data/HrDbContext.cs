@@ -38,6 +38,16 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
         {
             entity.ToTable("Hr_Departments");
             entity.HasKey(d => d.Id);
+            entity.Property(d => d.Name)
+                  .HasMaxLength(100)
+                  .IsRequired();
+            entity.Property(d => d.Description)
+                  .HasMaxLength(500);
+            // enforce uniqueness only for non-deleted rows
+            entity.HasIndex(d => d.Name)
+                  .IsUnique()
+                  .HasFilter("[IsDeleted] = 0"); // SQL Server filtered index
+            entity.HasQueryFilter(d => !d.IsDeleted);
         });
     }
 }

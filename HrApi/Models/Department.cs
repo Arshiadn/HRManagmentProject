@@ -6,7 +6,9 @@ public class Department
     public string Name { get; set; }
     public string? Description { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     public bool IsActive { get; set; }
+    public bool IsDeleted { get; set; }
 
-    public ICollection<Employee> Employees { get; set; }
+    public ICollection<Employee> Employees { get; set; } = new List<Employee>();
 }

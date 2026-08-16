@@ -4,4 +4,9 @@
 2: user github copilot and ask: Give me a checklist of problems, but do not rewrite the whole project.
 3: add personnelCode property to CreateEmployeeDto and create service and view and createApi(and updateapi)
 4: search about diffrence of [FromQuery], [FromBody], [FromForm]
-5: جایگزینی custome exception ها در سرویس و try/catch ها و کنترلر ها
+5: clean try/catch blocks in controllers and services
+*6: remove DepartmentName from Employee and rely on navigation / DTOs
+	to include department name when needed. Update mapping and DTOs where use
+		(Note: 1:department name is not needed in Employee table, it can be retrieved from Department table using navigation property
+				2: Update any DTO mapping that previously used Employee.DepartmentName to map from Employee.Department.Name.)
+7: 10 Tamrin jalase 36 anjam shavad
