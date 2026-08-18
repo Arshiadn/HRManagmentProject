@@ -25,6 +25,11 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
         {
             entity.ToTable("Hr_Employees");
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.PersonnelCode)
+                  .IsRequired()
+                  .HasMaxLength(20);
+            entity.HasIndex(e => e.PersonnelCode)
+                  .IsUnique();
             entity.HasOne(e => e.Department)
                   .WithMany(e => e.Employees)
                   .HasForeignKey(e => e.DepartmentId)

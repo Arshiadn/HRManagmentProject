@@ -1,5 +1,6 @@
 ﻿using HrApi.Data;
 using HrApi.DTOs.Departments;
+using HrApi.DTOs.Employees;
 using HrApi.Models;
 
 namespace HrApi.Interfaces;
@@ -8,6 +9,9 @@ public interface IDepartmentService
 {
     Task<IReadOnlyList<DepartmentListDto>>
         GetAllAsync(CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<DepartmentListDto>>
+        GetDeletedListAsync(CancellationToken cancellationToken);
 
     Task<DepartmentDetailsDto>
         GetByIdAsync(
@@ -33,6 +37,10 @@ public interface IDepartmentService
         CancellationToken cancellationToken);
 
     Task RestoreAsync(
+        int id,
+        CancellationToken cancellationToken);
+
+    Task<List<EmployeeListDto>> GetEmployeesAsync(
         int id,
         CancellationToken cancellationToken);
 }

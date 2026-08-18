@@ -3,6 +3,7 @@ using AutoMapper.QueryableExtensions;
 using Azure.Core;
 using HrApi.DTOs.Employees;
 using HrApi.DTOs.Paging;
+using HrApi.Exceptions;
 using HrApi.Interfaces;
 using HrApi.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -50,10 +51,9 @@ public class EmployeeService : IEmployeeService
             .Any(e => e.Email == model.Email);
         if (emailExists)
         {
-            throw new InvalidOperationException("این ایمیل قبلاً ثبت شده است");
+            throw new ConflictException("Email already exists");
         }
         var employee = _mapper.Map<Employee>(model);
-        employee.DepartmentName = "Unknown";
         employee.IsActive = true;
 
         _context.Employees.Add(employee);
@@ -66,17 +66,19 @@ public class EmployeeService : IEmployeeService
         var employee = _context.Employees.FirstOrDefault(e => e.Id == id);
         if (employee == null)
         {
-            throw new InvalidOperationException("کارمند مورد نظر پیدا نشد");
+            throw new NotFoundException($"Employee {id} not found.");
         }
         _mapper.Map(model, employee);
-        employee.DepartmentName = "Unknown";
+
         _context.SaveChanges();
     }
     public void Delete(int id)
     {
         var employee = _context.Employees.FirstOrDefault(e => e.Id == id);
         if (employee == null)
-            throw new InvalidOperationException("کارمند مورد نظر پیدا نشد");
+        {
+            throw new NotFoundException($"Employee {id} not found.");
+        }  
         _context.Employees.Remove(employee);
         _context.SaveChanges();
     }
@@ -85,7 +87,7 @@ public class EmployeeService : IEmployeeService
         var employee = await _context.Employees.FirstOrDefaultAsync(e => e.Id == id);
         if (employee == null)
         {
-            throw new InvalidOperationException("کارمند مورد نظر پیدا نشد");
+            throw new NotFoundException($"Employee {id} not found.");
         }
         employee.ProfileImagePath = imagePath;
         await _context.SaveChangesAsync();
@@ -160,8 +162,9 @@ public class EmployeeService : IEmployeeService
 
         if (employee == null)
         {
-            throw new InvalidOperationException("کارمند مورد نظر پیدا نشد");
+            throw new NotFoundException($"Employee {id} not found.");
         }
+
         var newPath = await _fileStorage.SavePublicImageAsync(model.Photo, "employees");
 
         if (!string.IsNullOrWhiteSpace(newPath))
@@ -183,17 +186,17 @@ public class EmployeeService : IEmployeeService
         var employee = await _context.Employees
                 .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.Id == id);
-        if(employee == null)
+        if (employee == null)
         {
-            throw new InvalidOperationException($"کارمند با آیدی {id} پیدا نشد");
+            throw new NotFoundException($"Employee {id} not found.");
         }
         if (string.IsNullOrWhiteSpace(employee.PhotoPath))
         {
-            throw new InvalidOperationException("تصویری ثبت نشده است");
+            throw new BadRequestException("No photo submited");
         }
         var request = _httpContextAccessor.HttpContext?.Request;
 
-        var fullUrl = $"{request?.Scheme}://{request.Host}{employee.PhotoPath}";
+        var fullUrl = $"{request?.Scheme}://{request?.Host}{employee.PhotoPath}";
 
         return new EmployeePhotoDto
         {
@@ -209,12 +212,12 @@ public class EmployeeService : IEmployeeService
 
         if (employee == null)
         {
-            throw new InvalidOperationException($"کارمند با آیدی {id} پیدا نشد");
+            throw new NotFoundException($"Employee {id} not found.");
         }
 
         if (string.IsNullOrWhiteSpace(employee.ContractPath))
         {
-            throw new InvalidOperationException("تصویری ثبت نشده است");
+            throw new BadRequestException("No photo submited");
         }
 
         return await _fileStorage.GetPrivateFileAsync(
@@ -228,7 +231,7 @@ public class EmployeeService : IEmployeeService
 
         if (employee == null)
         {
-            throw new InvalidOperationException($"کارمند با آیدی {id} پیدا نشد");
+            throw new NotFoundException($"Employee {id} not found.");
         }
 
         if (!string.IsNullOrWhiteSpace(employee.PhotoPath))
@@ -242,4 +245,47 @@ public class EmployeeService : IEmployeeService
             await _context.SaveChangesAsync();
         }
     }
-}
+    public async Task AssignPersonnelCodeAsync(
+    int id,
+    string personnelCode,
+    CancellationToken cancellationToken)
+    {
+        var employee = await _context.Employees
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+
+        if (employee == null)
+        {
+            throw new NotFoundException($"Employee {id} not found.");
+        }
+
+        employee.PersonnelCode = personnelCode;
+
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+    public async Task TransferEmployeesAsync
+        (TransferEmployeesDto request, CancellationToken cancellationToken)
+    {
+        var departmentExists = await _context.Departments
+            .AnyAsync(d => d.Id == request.TargetDepartmentId, cancellationToken);
+        if (!departmentExists)
+        {
+            throw new NotFoundException("Target department not found.");
+        }
+        var employees = await
+                _context.Employees
+                    .Where(e => request.EmployeeIds.Contains(e.Id))
+                    .ToListAsync(cancellationToken);
+        if (employees.Count != request.EmployeeIds.Count)
+        {
+            throw new NotFoundException("One or more employees were not found");
+        }
+        foreach(var employee in employees)
+        {
+            employee.DepartmentId = request.TargetDepartmentId;
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+ }

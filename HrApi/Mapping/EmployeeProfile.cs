@@ -9,12 +9,8 @@ public class EmployeeProfile : Profile
     public EmployeeProfile()
     {
         //Read
-        CreateMap<Employee, EmployeeListDto>()
-                .ForMember(d => d.DepartmentName,
-                    opt => opt.MapFrom(s => s.Department.Name));
-        CreateMap<Employee, EmployeeDetailsDto>()
-            .ForMember(d => d.DepartmentName,
-                    opt => opt.MapFrom(s => s.Department.Name));
+        CreateMap<Employee, EmployeeListDto>();
+        CreateMap<Employee, EmployeeDetailsDto>();
         //Create
         CreateMap<CreateEmployeeDto, Employee>();
         //Update

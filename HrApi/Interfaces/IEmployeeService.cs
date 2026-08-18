@@ -18,4 +18,6 @@ public interface IEmployeeService
     Task<EmployeePhotoDto> GetPhotoAsync(int id);
     Task<StoredFileResult?> DownloadContractAsync(int id);
     Task DeletePhotoAsync(int id);
+    Task AssignPersonnelCodeAsync(int id, string personnelCode, CancellationToken cancellationToken);
+    Task TransferEmployeesAsync(TransferEmployeesDto request, CancellationToken cancellationToken);
 }

@@ -14,6 +14,7 @@ namespace HrApi.Controllers;
 
 [ApiController]
 [Route("api/employee")]
+[AllowAnonymous]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 public class EmployeesApiController : ControllerBase
 {
@@ -51,53 +52,24 @@ public class EmployeesApiController : ControllerBase
     [HttpPost]
     public ActionResult<EmployeeDetailsDto> Create([FromBody] CreateEmployeeDto model)
     {
-        try
-        {
             var result = _employeeService.Create(model);
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = result.Id },
                 result);
-        }
-        catch(InvalidOperationException ex)
-        {
-            return Conflict(new ApiErrorResponse
-            {
-                Message = ex.Message
-            });
-        }
     }
+    //authorize by Hr Manager and admin
     [HttpPut("{id}")]
     public IActionResult Update(int id, UpdateEmployeeDto model)
     {
-        try
-        {
             _employeeService.Update(id, model);
             return NoContent();
-        }
-        catch(InvalidOperationException ex)
-        {
-            return NotFound(new ApiErrorResponse
-            {
-                Message = ex.Message
-            });
-        }
     }
     [HttpDelete("{id}")]
     public IActionResult Delete(int id)
     {
-        try
-        {
             _employeeService.Delete(id);
             return NoContent();
-        }
-        catch(InvalidOperationException ex)
-        {
-            return NotFound(new ApiErrorResponse
-            {
-                Message = ex.Message
-            });
-        }
     }
     [HttpGet("search")]
     public async Task<IActionResult> Search([FromQuery]EmployeeSearchRequestDto request)
@@ -114,8 +86,6 @@ public class EmployeesApiController : ControllerBase
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadPhoto(int id, [FromForm]EmployeePhotoUploadDto model)
     {
-        try
-        {
             var result = await _employeeService.UploadPhotoAsync(id, model);
             return Ok(new ApiResponse<EmployeePhotoDto>
             {
@@ -123,20 +93,10 @@ public class EmployeesApiController : ControllerBase
                 Message = "تصویر کارمند ذخیره شد",
                 Data = result
             });
-        }
-        catch(InvalidOperationException ex)
-        {
-            return NotFound(new ApiErrorResponse
-            {
-                Message = ex.Message
-            });
-        }
     }
     [HttpGet("{id:int}/photo")]
     public async Task<IActionResult> GetPhoto(int id)
     {
-        try
-        {
             var result = await _employeeService.GetPhotoAsync(id);
 
             return Ok(new ApiResponse<EmployeePhotoDto>
@@ -145,43 +105,47 @@ public class EmployeesApiController : ControllerBase
                 Message = "آدرس تصویر دریافت شد",
                 Data = result
             });
-        }
-        catch(InvalidOperationException ex)
-        {
-            return NotFound(new ApiErrorResponse
-            {
-                Message = ex.Message
-            });
-        }
     }
     [HttpGet("{id:int}/contract/download")]
     public async Task<IActionResult> DownloadContract(int id)
     {
-       try
-       { 
             var file = await _employeeService.DownloadContractAsync(id);
             return File(
                 file.Content,
                 file.ContentType,
                 file.DownloadName
             );
-        }
-        catch(InvalidOperationException ex)
-        {
-            return NotFound(new ApiErrorResponse { Message = ex.Message });
-        }
     }
     [HttpDelete("{id:int}/photo")]
     public async Task<IActionResult> DeletePhoto(int id)
     {
-        try
-        {
             await _employeeService.DeletePhotoAsync(id);
             return NoContent();
-        }
-        catch (InvalidOperationException ex)
+    }
+    [HttpPut("{id}/personnel-code")]
+    public async Task<IActionResult> AssignPersonnelCode(
+    int id,
+    string personnelCode,
+    CancellationToken cancellationToken)
+    {
+        await _employeeService.AssignPersonnelCodeAsync(
+            id,
+            personnelCode,
+            cancellationToken);
+
+        return NoContent();
+    }
+    [HttpPut("transfer")]
+    public async Task<IActionResult> 
+        TransferEmployees(TransferEmployeesDto request,  CancellationToken cancellationToken)
+    {
+        await _employeeService.TransferEmployeesAsync(request, cancellationToken);
+
+        return Ok(new ApiResponse<TransferEmployeesDto>
         {
-            return NotFound(new ApiErrorResponse { Message = ex.Message });
-        }
+            Success = true,
+            Message = "Employees transferred successfully",
+            Data = request
+        });
     }
 }

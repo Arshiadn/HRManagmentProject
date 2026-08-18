@@ -8,6 +8,8 @@ using HrApi.Models;
 using HrApi.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
+using Microsoft.Identity.Client;
+using HrApi.DTOs.Employees;
 
 public class DepartmentService : IDepartmentService
 {
@@ -31,6 +33,30 @@ public class DepartmentService : IDepartmentService
                 })
                 .ToListAsync(cancellationToken);       
     }
+    public async Task<IReadOnlyList<DepartmentListDto>> GetDeletedListAsync(CancellationToken cancellationToken)
+    {
+        var departments =  await _context.Departments
+                .AsNoTracking()
+                .IgnoreQueryFilters()
+                .Where(d => d.IsDeleted)
+                .OrderBy(d => d.Name)
+                    .Select(d => new DepartmentListDto
+                    {
+                        Id = d.Id,
+                        Name = d.Name,
+                        IsActive = d.IsActive,
+                        IsDeleted = d.IsDeleted,
+                        EmployeeCount = d.Employees.Count()
+                    })
+                .ToListAsync(cancellationToken);
+
+        if (!departments.Any())
+        {
+            throw new NotFoundException("There is no deleted Departments");
+        }
+
+        return departments;
+    }
     public async Task<DepartmentDetailsDto> GetByIdAsync(
             int id,
             CancellationToken cancellationToken)
@@ -40,7 +66,7 @@ public class DepartmentService : IDepartmentService
                             .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         if(department is null)
         {
-            throw new NotFoundException($"Department with id {id} was not found.");
+            throw new NotFoundException($"Department {id} was not found.");
         }
         
         return _mapper.Map<DepartmentDetailsDto>(department); 
@@ -98,7 +124,7 @@ public class DepartmentService : IDepartmentService
                         .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         if(department is null)
         {
-            throw new NotFoundException($"Department with id {id} was not found.");
+            throw new NotFoundException($"Department {id} was not found.");
         }
         var normalizedName = request.Name.Trim();
         var duplicateExists = await _context.Departments
@@ -125,7 +151,7 @@ public class DepartmentService : IDepartmentService
         if(department is null)
         {
             throw new NotFoundException(
-            $"Department with id {id} was not found.");
+            $"Department {id} was not found.");
         }
 
         var hasEmployee = await _context.Employees
@@ -146,10 +172,10 @@ public class DepartmentService : IDepartmentService
         CancellationToken cancellationToken)
     {
         var department = await _context.Departments
-    .IgnoreQueryFilters()
-    .FirstOrDefaultAsync(
-        d => d.Id == id && d.IsDeleted,
-        cancellationToken);
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(
+                d => d.Id == id && d.IsDeleted,
+                cancellationToken);
 
         if (department is null)
         {
@@ -162,5 +188,22 @@ public class DepartmentService : IDepartmentService
         department.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
+    }
+    public async Task<List<EmployeeListDto>> GetEmployeesAsync(int id, CancellationToken cancellationToken)
+    {
+        var department = await _context.Departments
+            .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+
+        if (department is null)
+        {
+            throw new NotFoundException($"Department {id} was not found.");
+        }
+        var employees = await _context.Employees
+            .AsNoTracking()
+            .Where(x => x.DepartmentId == id)
+            .OrderBy(x => x.FullName)
+            .ToListAsync(cancellationToken);
+
+        return _mapper.Map<List<EmployeeListDto>>(employees);
     }
 }

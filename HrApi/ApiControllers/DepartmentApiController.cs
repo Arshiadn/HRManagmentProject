@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using HrApi.DTOs.Departments;
+using HrApi.DTOs.Employees;
 using HrApi.Interfaces;
 using HrApi.Mapping;
 using HrApi.Models;
@@ -12,14 +13,17 @@ using Microsoft.AspNetCore.Mvc;
 namespace HrApi.Controllers;
 
 [ApiController]
-[Route("api/department")]
+[Route("api/departments")]
+[AllowAnonymous]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 public class DepartmentApiController : ControllerBase
 {
     private readonly IDepartmentService _departmentService;
-    public DepartmentApiController(IDepartmentService departmentService)
+    private readonly IEmployeeService _employeeService;
+    public DepartmentApiController(IDepartmentService departmentService, IEmployeeService employeeService)
     {
         _departmentService = departmentService;
+        _employeeService = employeeService;
     }
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<DepartmentListDto>>>
@@ -28,6 +32,18 @@ public class DepartmentApiController : ControllerBase
         var result =
             await _departmentService
                 .GetAllAsync(cancellationToken);
+
+        return Ok(new ApiResponse<IReadOnlyList<DepartmentListDto>>
+        {
+            Success = true,
+            Message = "Deleted departments retrieved successfully",
+            Data = result
+        });
+    }
+    [HttpGet("deleted")]
+    public async Task<ActionResult<IReadOnlyList<DepartmentListDto>>> GetDeletedList(CancellationToken cancellationToken)
+    {
+        var result = await _departmentService.GetDeletedListAsync(cancellationToken);
 
         return Ok(result);
     }
@@ -87,5 +103,16 @@ public class DepartmentApiController : ControllerBase
             .RestoreAsync(id, cancellationToken);
 
         return NoContent();
+    }
+    [HttpGet("{id:int}/employees")]
+    public async Task<IActionResult> GetEmployees(int id, CancellationToken cancellationToken)
+    {
+        var employees = await _departmentService.GetEmployeesAsync(id, cancellationToken);
+        return Ok(new ApiResponse<List<EmployeeListDto>>
+        {
+            Success = true,
+            Message = "Employees retrieved successfully",
+            Data = employees
+        });
     }
 }
