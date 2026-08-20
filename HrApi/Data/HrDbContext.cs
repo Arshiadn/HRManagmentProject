@@ -30,6 +30,8 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
                   .HasMaxLength(20);
             entity.HasIndex(e => e.PersonnelCode)
                   .IsUnique();
+            entity.HasIndex(e => e.DepartmentId)
+                  .IsUnique();
             entity.HasOne(e => e.Department)
                   .WithMany(e => e.Employees)
                   .HasForeignKey(e => e.DepartmentId)

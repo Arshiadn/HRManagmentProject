@@ -20,4 +20,5 @@ public interface IEmployeeService
     Task DeletePhotoAsync(int id);
     Task AssignPersonnelCodeAsync(int id, string personnelCode, CancellationToken cancellationToken);
     Task TransferEmployeesAsync(TransferEmployeesDto request, CancellationToken cancellationToken);
+    Task<PagedResultDto<EmployeeListItemDto>> GetListAsync(EmployeeListRequest request, CancellationToken cancellationToken);
 }

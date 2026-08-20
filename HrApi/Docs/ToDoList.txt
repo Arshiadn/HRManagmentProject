@@ -9,6 +9,7 @@
 	to include department name when needed. Update mapping and DTOs where use
 		(Note: 1:department name is not needed in Employee table, it can be retrieved from Department table using navigation property
 				2: Update any DTO mapping that previously used Employee.DepartmentName to map from Employee.Department.Name.)(done)
-7: 10 Tamrin jalase 36 anjam shavad
-8: git commit then move on to the next task(session 37)
+7: 10 Tamrin jalase 36 anjam shavad(done (some of them))
+8: git commit then move on to the next task(session 37)(done)
 9: ask about the cancellation tokens should add it to every sevice actions?
+10: add hire date to employee model and it's dtos

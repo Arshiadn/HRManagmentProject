@@ -288,4 +288,80 @@ public class EmployeeService : IEmployeeService
 
         await _context.SaveChangesAsync(cancellationToken);
     }
- }
+    public async Task<PagedResultDto<EmployeeListItemDto>>
+        GetListAsync(EmployeeListRequest request,
+            CancellationToken cancellationToken)
+    {
+        var query = _context.Employees
+                        .AsNoTracking()
+                        .AsQueryable();
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var search = request.Search.Trim();
+            query = query.Where(s =>
+            s.FullName.Contains(search) ||
+            s.Email.Contains(search) ||
+            s.PersonnelCode.Contains(search));
+        }
+        if (request.DepartmentId.HasValue)
+            query = query.Where(x =>
+                x.DepartmentId == request.DepartmentId.Value);
+
+        if (request.IsActive.HasValue)
+            query = query.Where(x =>
+                x.IsActive == request.IsActive.Value);
+
+        var desc = string.Equals(
+            request.SortDirection,
+            "desc",
+            StringComparison.OrdinalIgnoreCase);
+
+        var sortBy = request.SortBy?.ToLowerInvariant() ?? "fullname";
+
+        query = sortBy switch
+        {
+            "email" => desc
+                ? query.OrderByDescending(x => x.Email)
+                    .ThenBy(x => x.Id)
+                : query.OrderBy(x => x.Email)
+                    .ThenBy(x => x.Id),
+            "personnelcode" => desc
+                ? query.OrderByDescending(x => x.PersonnelCode)
+                    .ThenBy(x => x.Id)
+                : query.OrderBy(x => x.PersonnelCode)
+                    .ThenBy(x => x.Id),
+            "fullname" => desc
+                ? query.OrderByDescending(x => x.FullName)
+                    .ThenBy(x => x.Id)
+                : query.OrderBy(x => x.FullName)
+                    .ThenBy(x => x.Id),
+            _ => throw new BadRequestException("Invalid SortBy input")
+        };
+
+        var totalItems = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip((request.Page - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .Select(x => new EmployeeListItemDto
+            {
+                Id = x.Id,
+                PersonnelCode = x.PersonnelCode,
+                FullName = x.FullName,
+                DepartmentId = x.DepartmentId,
+                DepartmentName = x.Department.Name,
+                IsActive = x.IsActive
+            })
+            .ToListAsync(cancellationToken);
+
+        return new PagedResultDto<EmployeeListItemDto>
+        {
+            Items = items,
+            Page = request.Page,
+            PageSize = request.PageSize,
+            TotalCount = totalItems,
+            TotalPages = (int)Math.Ceiling(
+                totalItems / (double)request.PageSize)
+        };
+    }
+}

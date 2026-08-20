@@ -148,4 +148,12 @@ public class EmployeesApiController : ControllerBase
             Data = request
         });
     }
+    [HttpGet("list")]
+    public async Task<ActionResult<PagedResultDto<EmployeeListItemDto>>>
+        GetListAsync([FromQuery] EmployeeListRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _employeeService.GetListAsync(request, cancellationToken);
+
+        return Ok(result);
+    }
 }
