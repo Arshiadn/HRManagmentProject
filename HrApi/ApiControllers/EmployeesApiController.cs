@@ -29,7 +29,7 @@ public class EmployeesApiController : ControllerBase
         var result = _employeeService.GetAll();
         return Ok(result);
     }
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public ActionResult<ApiResponse<EmployeeDetailsDto?>> GetById(int id)
     {
         var employee = _employeeService.GetById(id);

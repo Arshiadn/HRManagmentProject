@@ -12,6 +12,8 @@ public sealed class EmployeeListRequest
     public string? Search {  get; set; }
     public int? DepartmentId { get; set; }
     public bool? IsActive { get; set; }
+    public DateTime? HireDateFrom { get; set; }
+    public DateTime? HireDateTo { get; set; }
     public string SortBy { get; set; } = "FullName";
     [RegularExpression("asc|desc")]
     public string SortDirection { get; set; } = "asc";

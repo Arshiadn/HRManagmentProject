@@ -12,4 +12,13 @@
 7: 10 Tamrin jalase 36 anjam shavad(done (some of them))
 8: git commit then move on to the next task(session 37)(done)
 9: ask about the cancellation tokens should add it to every sevice actions?
-10: add hire date to employee model and it's dtos
+10*: add hire date to employee model and it's dtos(done)
+10**: add Phone Number Property to Employee and it's needed Dtos
+10***: test and fix any bug if apear(?)
+11*: Add needed roles
+
+
+Candidate temp check scenarios:
+	all of scenarios // all done except the search
+	Get By id // 500
+	Search list // 500

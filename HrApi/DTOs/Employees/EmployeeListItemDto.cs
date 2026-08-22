@@ -7,5 +7,6 @@ public sealed class EmployeeListItemDto
     public string FullName { get; set; } = string.Empty;
     public string DepartmentName { get; set; } = string.Empty;
     public int DepartmentId { get; set; }
+    public DateTime HireDate { get; set; }
     public bool IsActive { get; set; }
 }

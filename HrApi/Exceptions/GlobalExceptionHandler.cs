@@ -29,6 +29,7 @@ public class GlobalExceptionHandler : IExceptionHandler
             NotFoundException => 404,
             ConflictException => 409,
             BadRequestException => 400,
+            BusinessRuleException => 400,
             _ => 500
         };
 

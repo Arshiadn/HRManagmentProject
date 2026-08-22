@@ -10,6 +10,9 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Employee> Employees { get; set; }
     public DbSet<Department> Departments { get; set; }
+    public DbSet<Candidate> Candidates { get; set; }
+    public DbSet<Interview> Interviews { get; set; }
+    public DbSet<RecruitmentStageHistory> RecruitmentStageHistories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -17,6 +20,7 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
 
         ConfigureEmployee(modelBuilder);
         ConfigureDepartment(modelBuilder);
+        ConfigureCandidate(modelBuilder);
     }
 
     private void ConfigureEmployee(ModelBuilder modelbuilder)
@@ -30,15 +34,12 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
                   .HasMaxLength(20);
             entity.HasIndex(e => e.PersonnelCode)
                   .IsUnique();
-            entity.HasIndex(e => e.DepartmentId)
-                  .IsUnique();
             entity.HasOne(e => e.Department)
                   .WithMany(e => e.Employees)
                   .HasForeignKey(e => e.DepartmentId)
                   .OnDelete(DeleteBehavior.Restrict);
         });
     }
-
     private void ConfigureDepartment(ModelBuilder modelbuilder)
     {
         modelbuilder.Entity<Department>(entity =>
@@ -55,6 +56,37 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
                   .IsUnique()
                   .HasFilter("[IsDeleted] = 0"); // SQL Server filtered index
             entity.HasQueryFilter(d => !d.IsDeleted);
+        });
+    }
+    private void ConfigureCandidate(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Candidate>(entity =>
+        {
+            entity.ToTable("Candidates");
+
+            entity.HasKey(c => c.Id);
+
+            entity.Property(c => c.FullName)
+            .HasMaxLength(200)
+            .IsRequired();
+
+            entity.Property(c => c.Email)
+            .HasMaxLength(200)
+            .IsRequired();
+
+            entity.Property(c => c.PhoneNumber)
+            .HasMaxLength(11)
+            .IsRequired();
+
+            entity.Property(c => c.Stage)
+            .HasConversion<int>();
+
+            entity.HasIndex(c => c.Email);
+
+            entity.HasOne(c => c.Employee)
+            .WithOne()
+            .HasForeignKey<Candidate>(c => c.EmployeeId)
+            .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

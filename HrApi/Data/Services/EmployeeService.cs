@@ -311,6 +311,18 @@ public class EmployeeService : IEmployeeService
             query = query.Where(x =>
                 x.IsActive == request.IsActive.Value);
 
+        if (request.HireDateFrom.HasValue)
+        {
+            query = query.Where(x =>
+                x.HireDateFrom >= request.HireDateFrom.Value);
+        }
+
+        if (request.HireDateTo.HasValue)
+        {
+            query = query.Where(x =>
+                x.HireDateTo <= request.HireDateTo.Value);
+        }
+
         var desc = string.Equals(
             request.SortDirection,
             "desc",
@@ -350,6 +362,7 @@ public class EmployeeService : IEmployeeService
                 FullName = x.FullName,
                 DepartmentId = x.DepartmentId,
                 DepartmentName = x.Department.Name,
+                HireDate = x.HireDateFrom,
                 IsActive = x.IsActive
             })
             .ToListAsync(cancellationToken);

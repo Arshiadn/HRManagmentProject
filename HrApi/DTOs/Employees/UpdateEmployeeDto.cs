@@ -8,4 +8,5 @@ public class UpdateEmployeeDto
     public decimal Salary { get; set; }
     public string PersonnelCode { get; set; }
     public bool IsActive { get; set; }
+    public DateTime? HireDateTo { get; set; }
 }

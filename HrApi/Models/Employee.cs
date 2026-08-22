@@ -7,13 +7,18 @@ public class Employee
     public int Id { get; set; }
     public string FullName { get; set; }
     public string Email { get; set; }
-    public string? PersonnelCode { get; set; }
+    public string PersonnelCode { get; set; }
     public decimal Salary { get; set; }
     public string? ProfileImagePath { get; set; }
     public string? PhotoPath { get; set; }
     public string? ContractPath { get; set; }
+    public DateTime HireDateFrom { get; set; }
+    public DateTime? HireDateTo { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string? PhoneNumber { get; set; }
     public bool IsActive { get; set; } = true;
 
     public int DepartmentId { get; set; }
     public Department Department { get; set; } = null!;
+
 }
