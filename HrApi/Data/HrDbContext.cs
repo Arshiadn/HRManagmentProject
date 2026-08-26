@@ -13,6 +13,8 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Candidate> Candidates { get; set; }
     public DbSet<Interview> Interviews { get; set; }
     public DbSet<RecruitmentStageHistory> RecruitmentStageHistories { get; set; }
+    public DbSet<EmployeeContract> EmployeeContracts { get; set; }
+    public DbSet<ContractStateHistory> ContractStateHistories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -21,6 +23,7 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
         ConfigureEmployee(modelBuilder);
         ConfigureDepartment(modelBuilder);
         ConfigureCandidate(modelBuilder);
+        ConfigureEmployeeContract(modelBuilder);
     }
 
     private void ConfigureEmployee(ModelBuilder modelbuilder)
@@ -87,6 +90,53 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
             .WithOne()
             .HasForeignKey<Candidate>(c => c.EmployeeId)
             .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+    private void ConfigureEmployeeContract(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EmployeeContract>(entity =>
+        {
+            entity.ToTable("EmployeeContracts");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.Id)
+                .ValueGeneratedOnAdd();
+
+            entity.Property(x => x.EmployeeId)
+                .IsRequired();
+
+            entity.Property(x => x.ContractType)
+                .IsRequired();
+
+            entity.Property(x => x.Status)
+                .IsRequired();
+
+            entity.Property(x => x.StartDate)
+                .IsRequired();
+
+            entity.Property(x => x.EndDate)
+                .IsRequired();
+
+            entity.Property(x => x.ProbationEndDate)
+                .IsRequired(false);
+
+            entity.Property(x => x.BaseSalary)
+                .IsRequired();
+
+            entity.Property(x => x.Currency)
+                .IsRequired();
+
+            entity.Property(x => x.CreatedAtUtc)
+                .IsRequired();
+
+            entity.Property(x => x.RowVersion)
+                .IsRowVersion();
+
+            entity.HasOne(x => x.Employee)
+                .WithMany(x => x.Contracts)
+                .HasForeignKey(x => x.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

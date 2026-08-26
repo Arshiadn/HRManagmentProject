@@ -14,11 +14,11 @@ public class Employee
     public string? ContractPath { get; set; }
     public DateTime HireDateFrom { get; set; }
     public DateTime? HireDateTo { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public string? PhoneNumber { get; set; }
     public bool IsActive { get; set; } = true;
 
     public int DepartmentId { get; set; }
     public Department Department { get; set; } = null!;
-
+    public ICollection<EmployeeContract> Contracts { get; set; } = [];
 }

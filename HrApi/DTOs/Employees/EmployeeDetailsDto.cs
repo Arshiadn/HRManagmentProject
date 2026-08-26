@@ -7,4 +7,6 @@ public class EmployeeDetailsDto
     public string Email { get; set; }
     public string PersonnelCode { get; set; }
     public decimal Salary { get; set; }
+    public DateTime HireDateFrom { get; set; }
+    public DateTime? HireDateTo { get; set; }
 }

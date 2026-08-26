@@ -27,7 +27,7 @@ public sealed class CandidatesController : ControllerBase
         CreateCandidateRequest request,
         CancellationToken cancellationToken)
     {
-        var id = await _recruitmentService.CreateCandidateAsync(request, cancellationToken);
+        var id = await _candidateServicecs.CreateCandidateAsync(request, cancellationToken);
 
         return CreatedAtAction(
             nameof(GetById),

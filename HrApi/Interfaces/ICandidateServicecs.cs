@@ -6,6 +6,10 @@ namespace HrApi.Interfaces;
 
 public interface ICandidateServicecs
 {
+    Task<int> CreateCandidateAsync(
+        CreateCandidateRequest request,
+        CancellationToken cancellationToken);
+
     Task<PagedResultDto<CandidateDetailsDto>> GetListAsync(
         CandidateListRequest request,
         CancellationToken cancellationToken);

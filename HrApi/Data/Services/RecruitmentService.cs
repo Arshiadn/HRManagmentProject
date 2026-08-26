@@ -79,37 +79,6 @@ public class RecruitmentService : IRecruitmentService
             ChangedByUserId = _currentUserService.UserId
         });
     }
-    public async Task<int> CreateCandidateAsync(
-        CreateCandidateRequest request,
-        CancellationToken cancellationToken)
-    {
-        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
-
-        var emailExists = await _context.Candidates
-            .AnyAsync(c => c.Email == normalizedEmail &&
-             c.Stage != RecruitmentStage.Rejected,
-             cancellationToken);
-        if (emailExists)
-        {
-            throw new BusinessRuleException(
-                "An active candidate with this email already exists.");
-        }
-
-        var candidate = new Candidate
-        {
-            FullName = request.FullName.Trim(),
-            Email = normalizedEmail,
-            PhoneNumber = request.PhoneNumber,
-            CreatedAtUtc = DateTime.UtcNow,
-            Stage = RecruitmentStage.New
-        };
-
-        _context.Candidates.Add(candidate);
-
-        await _context.SaveChangesAsync(cancellationToken);
-
-        return candidate.Id;
-    }
     public async Task ScheduleInterviewAsync(
     int candidateId,
     ScheduleInterviewRequest request,

@@ -5,10 +5,6 @@ namespace HrApi.Interfaces;
 
 public interface IRecruitmentService
 {
-    Task<int> CreateCandidateAsync(
-        CreateCandidateRequest request,
-        CancellationToken cancellationToken);
-
     Task ScheduleInterviewAsync(
         int candidateId,
         ScheduleInterviewRequest request,

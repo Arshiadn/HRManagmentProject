@@ -1,13 +1,13 @@
 ﻿using HrApi.DTOs.Candidates;
-using HrApi.DTOs.Employees;
 using HrApi.DTOs.Interviews;
-using HrApi.DTOs.StageHistory;
 using HrApi.DTOs.Paging;
-using HrApi.Interfaces;
-using HrApi.Responses;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
+using HrApi.DTOs.StageHistory;
+using HrApi.Enums;
 using HrApi.Exceptions;
+using HrApi.Interfaces;
+using HrApi.Models;
+using HrApi.Responses;
+using Microsoft.EntityFrameworkCore;
 
 namespace HrApi.Data.Services;
 
@@ -147,5 +147,36 @@ public class CandidateService : ICandidateServicecs
             TotalPages = (int)Math.Ceiling(
                 totalItems / (double)request.PageSize)
         };
+    }
+    public async Task<int> CreateCandidateAsync(
+    CreateCandidateRequest request,
+    CancellationToken cancellationToken)
+    {
+        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+
+        var emailExists = await _context.Candidates
+            .AnyAsync(c => c.Email == normalizedEmail &&
+             c.Stage != RecruitmentStage.Rejected,
+             cancellationToken);
+        if (emailExists)
+        {
+            throw new BusinessRuleException(
+                "An active candidate with this email already exists.");
+        }
+
+        var candidate = new Candidate
+        {
+            FullName = request.FullName.Trim(),
+            Email = normalizedEmail,
+            PhoneNumber = request.PhoneNumber,
+            CreatedAtUtc = DateTime.UtcNow,
+            Stage = RecruitmentStage.New
+        };
+
+        _context.Candidates.Add(candidate);
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return candidate.Id;
     }
 }
