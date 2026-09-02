@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using HrApi.DTOs.Attendance;
 using HrApi.DTOs.Employees;
 using HrApi.DTOs.Paging;
+using HrApi.DTOs.ShiftAssignment;
 using HrApi.Interfaces;
 using HrApi.Models;
 using HrApi.Responses;
@@ -19,9 +21,16 @@ namespace HrApi.Controllers;
 public class EmployeesApiController : ControllerBase
 {
     private readonly IEmployeeService _employeeService;
-    public EmployeesApiController(IEmployeeService employeeService)
+    private readonly IAttendanceService _attendanceService;
+    private readonly IEmployeeShiftAssignmentService _employeeShiftAssignmentService;
+    public EmployeesApiController(
+        IEmployeeService employeeService,
+        IAttendanceService attendanceService,
+        IEmployeeShiftAssignmentService employeeShiftAssignmentService)
     {
         _employeeService = employeeService;
+        _attendanceService = attendanceService;
+        _employeeShiftAssignmentService = employeeShiftAssignmentService;
     }
     [HttpGet]
     public ActionResult<List<EmployeeListDto>> GetAll()
@@ -155,5 +164,51 @@ public class EmployeesApiController : ControllerBase
         var result = await _employeeService.GetListAsync(request, cancellationToken);
 
         return Ok(result);
+    }
+    [HttpGet("{id}/attendance")]
+    public async Task<ActionResult<PagedResultDto<AttendanceDailyDto>>> GetEmployeeAttendance(
+        int id,
+        [FromQuery] AttendanceListRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _attendanceService
+            .GetEmployeeAttendance(id, request, cancellationToken);
+
+        return Ok(result);
+    }
+    [HttpGet("{id:int}/shift-assignments")]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<ShiftAssignmentDetailsDto>>>> 
+        GetShiftAssignments(
+            int employeeId,
+            CancellationToken cancellationToken)
+    {
+        var assignment = await _employeeShiftAssignmentService
+            .GetAssignmentsAsync(employeeId, cancellationToken);
+
+        return Ok(new ApiResponse<IReadOnlyList<ShiftAssignmentDetailsDto>>
+        {
+            Success = true,
+            Message = "Shift assignments retrieved successfully",
+            Data = assignment
+        });
+    }
+    [HttpPost("{id:int}/shift-assignments")]
+    public async Task<ActionResult<ApiResponse<ShiftAssignmentDetailsDto>>> 
+        CreateShiftAssignment(
+            int employeeId,
+            [FromBody] CreateShiftAssignmentDto request,
+            CancellationToken cancellationToken)
+    {
+        var assignment = await _employeeShiftAssignmentService
+            .AssignShiftAsync(employeeId, request, cancellationToken);
+
+        return StatusCode(
+        StatusCodes.Status201Created,
+        new ApiResponse<ShiftAssignmentDetailsDto>
+        {
+            Success = true,
+            Message = "Shift assignment created successfully",
+            Data = assignment
+        });
     }
 }

@@ -17,3 +17,5 @@
 10***: test and fix any bug if apear(?) (done)
 11*: Add needed roles
 12: test Contract State machine
+13: Create Order: => shift then attendance then employee APIs (done)
+14: test Shift and Attendance APIs

@@ -15,15 +15,21 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<RecruitmentStageHistory> RecruitmentStageHistories { get; set; }
     public DbSet<EmployeeContract> EmployeeContracts { get; set; }
     public DbSet<ContractStateHistory> ContractStateHistories { get; set; }
+    public DbSet<Shift> Shifts { get; set; }
+    public DbSet<AttendanceRecord> AttendanceRecords { get; set; }
+    public DbSet<EmployeeShiftAssignment> ShiftAssignments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
+        
         ConfigureEmployee(modelBuilder);
         ConfigureDepartment(modelBuilder);
         ConfigureCandidate(modelBuilder);
         ConfigureEmployeeContract(modelBuilder);
+        ConfigureShift(modelBuilder);
+        ConfigureAttendanceRecord(modelBuilder);
+        ConfigureShiftAssignment(modelBuilder);
     }
 
     private void ConfigureEmployee(ModelBuilder modelbuilder)
@@ -137,6 +143,109 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(x => x.Contracts)
                 .HasForeignKey(x => x.EmployeeId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+    private void ConfigureShift(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Shift>(entity =>
+        {
+            entity.ToTable("Shifts");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.Name)
+                  .HasMaxLength(100)
+                  .IsRequired();
+
+            entity.Property(x => x.GraceMinutes)
+            .IsRequired(); 
+
+            entity.Property(x => x.IsActive)
+            .IsRequired(); 
+
+            entity.HasIndex(x => x.Name)
+            .IsUnique();
+
+            entity.ComplexProperty(x => x.WorkingHours, range =>
+            {
+                range.Property(r => r.Start)
+                    .HasColumnName("StartTime");
+
+                range.Property(r => r.End)
+                    .HasColumnName("EndTime");
+            });
+        });
+    }
+    private void ConfigureAttendanceRecord(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AttendanceRecord>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.WorkDate)
+                .IsRequired();
+
+            entity.Property(x => x.CheckInAt)
+                .IsRequired(false);
+
+            entity.Property(x => x.CheckOutAt)
+                .IsRequired(false);
+
+            entity.Property(x => x.WorkedMinutes)
+                .IsRequired();
+
+            entity.Property(x => x.LateMinutes)
+                .IsRequired();
+
+            entity.Property(x => x.EarlyLeaveMinutes)
+                .IsRequired();
+
+            entity.Property(x => x.OvertimeMinutes)
+                .IsRequired();
+
+            entity.HasIndex(x => new
+            {
+                x.EmployeeId,
+                x.WorkDate
+            })
+            .IsUnique();
+
+            entity.Property(x => x.RowVersion)
+                .IsRowVersion();
+
+            entity.HasOne(x => x.Employee)
+                  .WithMany(x => x.AttendanceRecords)
+                  .HasForeignKey(x => x.EmployeeId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+    private void ConfigureShiftAssignment(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EmployeeShiftAssignment>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.EffectiveFrom)
+                .IsRequired();
+
+            entity.Property(x => x.EffectiveTo)
+                .IsRequired(false);
+
+            entity.HasOne(x => x.Employee)
+                .WithMany(x => x.ShiftAssignments)
+                .HasForeignKey(x => x.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Shift)
+                .WithMany(x => x.EmployeeAssignments)
+                .HasForeignKey(x => x.ShiftId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new
+            {
+                x.EmployeeId,
+                x.EffectiveFrom
+            });
         });
     }
 }

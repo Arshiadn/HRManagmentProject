@@ -17,6 +17,7 @@ using Microsoft.OpenApi.Models;
 using System.Runtime;
 using System.Text;
 using HrApi.Repositories;
+using HrApi.Setting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,7 +72,11 @@ builder.Services.AddScoped<IRecruitmentService, RecruitmentService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<ICandidateServicecs, CandidateService>();
 builder.Services.AddScoped<IContractService, ContractService>();
+builder.Services.AddScoped<IShiftService, ShiftService>();
+builder.Services.AddScoped<IAttendanceService, AttendanceService>();
+builder.Services.AddScoped<IEmployeeShiftAssignmentService, EmployeeShiftAssignmentService>();
 builder.Services.AddScoped(typeof(IReadRepository<>), typeof(EfRepository<>));
+builder.Services.Configure<TimeSettings>(builder.Configuration.GetSection("TimeSettings"));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>

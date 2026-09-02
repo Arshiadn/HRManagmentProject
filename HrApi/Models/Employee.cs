@@ -20,5 +20,10 @@ public class Employee
 
     public int DepartmentId { get; set; }
     public Department Department { get; set; } = null!;
-    public ICollection<EmployeeContract> Contracts { get; set; } = [];
+    public ICollection<EmployeeContract> Contracts { get; set; } 
+        = new List<EmployeeContract>();
+    public ICollection<AttendanceRecord> AttendanceRecords { get; set; }
+        = new List<AttendanceRecord>();
+    public ICollection<EmployeeShiftAssignment> ShiftAssignments { get; set; }
+        = new List<EmployeeShiftAssignment>();
 }
