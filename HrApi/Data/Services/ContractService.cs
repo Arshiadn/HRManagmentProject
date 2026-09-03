@@ -10,6 +10,7 @@ using HrApi.Repositories;
 using HrApi.Responses;
 using HrApi.Specifications.Contracts;
 using HrApi.Specifications.Employee.Contracts;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
@@ -152,11 +153,11 @@ public class ContractService : IContractService
     SubmitSignatureRequest request,
     CancellationToken cancellationToken)
     {
-        var specification = new
-            FindContractByIdSpecification(contractId);
-
-        var contract = await _readRepository
-            .FirstOrDefaultAsync(specification, cancellationToken);
+        var contract = await _context.EmployeeContracts
+            .Include(x => x.StateHistories)
+            .FirstOrDefaultAsync(
+                x => x.Id == contractId,
+                cancellationToken);
 
         if (contract is null)
         {
@@ -178,11 +179,11 @@ public class ContractService : IContractService
         ActivateContractRequest request,
         CancellationToken cancellationToken)
     {
-        var specification = new
-    FindContractByIdSpecification(contractId);
-
-        var contract = await _readRepository
-            .FirstOrDefaultAsync(specification, cancellationToken);
+        var contract = await _context.EmployeeContracts
+            .Include(x => x.StateHistories)
+            .FirstOrDefaultAsync(
+                x => x.Id == contractId,
+                cancellationToken);
 
         if (contract is null)
         {
@@ -206,11 +207,11 @@ public class ContractService : IContractService
         CancelContractRequest request,
         CancellationToken cancellationToken)
     {
-        var specification = new
-            FindContractByIdSpecification(contractId);
-
-        var contract = await _readRepository
-            .FirstOrDefaultAsync(specification, cancellationToken);
+        var contract = await _context.EmployeeContracts
+            .Include(x => x.StateHistories)
+            .FirstOrDefaultAsync(
+                x => x.Id == contractId,
+                cancellationToken);
 
         if (contract is null)
         {
@@ -232,11 +233,11 @@ public class ContractService : IContractService
         string reason,
         CancellationToken cancellationToken)
     {
-        var specification = new
-            FindContractByIdSpecification(contractId);
-
-        var contract = await _readRepository
-            .FirstOrDefaultAsync(specification, cancellationToken);
+        var contract = await _context.EmployeeContracts
+            .Include(x => x.StateHistories)
+            .FirstOrDefaultAsync(
+                x => x.Id == contractId,
+                cancellationToken);
 
         if (contract is null)
         {
@@ -262,11 +263,11 @@ public class ContractService : IContractService
         CompleteContractRequest request,
         CancellationToken cancellationToken)
     {
-        var specification = new
-            FindContractByIdSpecification(contractId);
-
-        var contract = await _readRepository
-            .FirstOrDefaultAsync(specification, cancellationToken);
+        var contract = await _context.EmployeeContracts
+            .Include(x => x.StateHistories)
+            .FirstOrDefaultAsync(
+                x => x.Id == contractId,
+                cancellationToken);
 
         if (contract is null)
         {
@@ -342,7 +343,7 @@ public class ContractService : IContractService
         contract.StateHistories.Add(new ContractStateHistory
         {
             ContractId = contract.Id,
-            Employee = contract.Employee,
+            EmployeeId = contract.EmployeeId,
             FromState = currentStatus,
             ToState = targetStatus,
             Reason = reason,

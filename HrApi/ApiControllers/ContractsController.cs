@@ -54,16 +54,16 @@ public class ContractsController : ControllerBase
             new { id },
             new { id });
     }
-    [HttpPost("{id}/submit-for-signature")]
+    [HttpPost("{id:int}/submit-for-signature")]
     public async Task<IActionResult> SubmitSignature(
         int contractId,
-        SubmitSignatureRequest request,
+        [FromBody] SubmitSignatureRequest request,
         CancellationToken cancellationToken)
     {
         await _contractService.SubmitSignatureAsync(
             contractId, request, cancellationToken);
 
-        return NoContent();
+        return Ok();
     }
     [HttpPost("{id}/activate")]
     public async Task<IActionResult> Activate(
@@ -74,7 +74,7 @@ public class ContractsController : ControllerBase
         await _contractService.ActivateContractAsync(
             contractId, request, cancellationToken);
 
-        return NoContent();
+        return Ok();
     }
     [HttpPost("{id}/cancel")]
     public async Task<IActionResult> Cancel(
@@ -85,7 +85,7 @@ public class ContractsController : ControllerBase
         await _contractService.CancelContractAsync(
             contractId, request, cancellationToken);
 
-        return NoContent();
+        return Ok();
     }
     [HttpPost("{id}/renew")]
     public async Task<IActionResult> Renew(
@@ -96,6 +96,17 @@ public class ContractsController : ControllerBase
         await _contractService.RenewContractAsync(
             contractId, reason, cancellationToken);
 
-        return NoContent();
+        return Ok();
+    }
+    [HttpPost("{id}/complete-contract")]
+    public async Task<IActionResult> Complete(
+        int contractId,
+        CompleteContractRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _contractService.CompleteContractAsync(
+            contractId, request, cancellationToken);
+
+        return Ok();
     }
 }

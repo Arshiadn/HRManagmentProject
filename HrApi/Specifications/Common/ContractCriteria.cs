@@ -25,7 +25,7 @@ public static class ContractCriteria
                  x.ContractType == request.ContractType.Value) &&
 
              (!request.BaseSalary.HasValue ||
-                 x.BaseSalary >= request.BaseSalary.Value) &&
+                 x.BaseSalary <= request.BaseSalary.Value) &&
 
         (!request.ExpiresWithinDays.HasValue ||
              (x.Status == ContractStatus.Active &&

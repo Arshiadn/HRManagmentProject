@@ -16,6 +16,6 @@
 10**: add Phone Number Property to Employee and it's needed Dtos
 10***: test and fix any bug if apear(?) (done)
 11*: Add needed roles
-12: test Contract State machine
+12: test Contract State machine(done)
 13: Create Order: => shift then attendance then employee APIs (done)
-14: test Shift and Attendance APIs
+14: test Shift and Attendance APIs (done)

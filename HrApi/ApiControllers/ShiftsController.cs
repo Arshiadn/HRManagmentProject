@@ -25,7 +25,7 @@ public class ShiftsController : ControllerBase
             new ApiResponse<ShiftDetailsDto>
             { 
                 Success = true,
-                Message = $"Shift Created {shift.Id}",
+                Message = $"Shift Created with ID {shift.Id}",
                 Data = shift
             });
     }

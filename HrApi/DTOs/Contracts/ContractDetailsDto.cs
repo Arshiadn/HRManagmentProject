@@ -20,7 +20,4 @@ public sealed class ContractDetailsDto // Get By Id
     public decimal BaseSalary { get; init; }
 
     public CurrencyCode Currency { get; init; }
-
-    public IReadOnlyList<ContractStateHistory> StateHistories { get; init; }
-        = Array.Empty<ContractStateHistory>();
 }

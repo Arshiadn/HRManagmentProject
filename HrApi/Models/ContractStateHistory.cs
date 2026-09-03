@@ -9,7 +9,7 @@ public sealed class ContractStateHistory
 
     public int ContractId { get; set; }
 
-    public Employee Employee { get; set; } = null!;
+    public int EmployeeId { get; set; }
 
     public ContractStatus FromState{ get; set; }
 
