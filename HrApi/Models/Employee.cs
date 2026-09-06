@@ -26,4 +26,6 @@ public class Employee
         = new List<AttendanceRecord>();
     public ICollection<EmployeeShiftAssignment> ShiftAssignments { get; set; }
         = new List<EmployeeShiftAssignment>();
+    public ICollection<EmployeeRequest> Requests { get; set; }
+        = new List<EmployeeRequest>();
 }

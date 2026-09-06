@@ -23,14 +23,17 @@ public class EmployeesApiController : ControllerBase
     private readonly IEmployeeService _employeeService;
     private readonly IAttendanceService _attendanceService;
     private readonly IEmployeeShiftAssignmentService _employeeShiftAssignmentService;
+    private readonly IEmployeeRequestService _employeeRequestService;
     public EmployeesApiController(
         IEmployeeService employeeService,
         IAttendanceService attendanceService,
-        IEmployeeShiftAssignmentService employeeShiftAssignmentService)
+        IEmployeeShiftAssignmentService employeeShiftAssignmentService,
+        IEmployeeRequestService employeeRequestService)
     {
         _employeeService = employeeService;
         _attendanceService = attendanceService;
         _employeeShiftAssignmentService = employeeShiftAssignmentService;
+        _employeeRequestService = employeeRequestService;
     }
     [HttpGet]
     public ActionResult<List<EmployeeListDto>> GetAll()
@@ -210,5 +213,18 @@ public class EmployeesApiController : ControllerBase
             Message = "Shift assignment created successfully",
             Data = assignment
         });
+    }
+    [HttpGet("{id:int}/requests")]
+    public async Task<ActionResult<ApiResponse<ShiftAssignmentDetailsDto>>>
+        GetRequestById(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        var result = await _employeeRequestService
+        .GetById(
+            id,
+            cancellationToken);
+
+        return Ok(result);
     }
 }

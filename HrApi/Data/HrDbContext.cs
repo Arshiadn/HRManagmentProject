@@ -1,4 +1,5 @@
-﻿using HrApi.Models;
+﻿using HrApi.Enums.Request;
+using HrApi.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,7 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Shift> Shifts { get; set; }
     public DbSet<AttendanceRecord> AttendanceRecords { get; set; }
     public DbSet<EmployeeShiftAssignment> ShiftAssignments { get; set; }
+    public DbSet<EmployeeRequest> EmployeeRequests { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,6 +32,7 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
         ConfigureShift(modelBuilder);
         ConfigureAttendanceRecord(modelBuilder);
         ConfigureShiftAssignment(modelBuilder);
+        ConfigureEmployeeRequest(modelBuilder);
     }
 
     private void ConfigureEmployee(ModelBuilder modelbuilder)
@@ -88,7 +91,7 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
             .IsRequired();
 
             entity.Property(c => c.Stage)
-            .HasConversion<int>();
+            .HasConversion<string>();
 
             entity.HasIndex(c => c.Email);
 
@@ -246,6 +249,61 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
                 x.EmployeeId,
                 x.EffectiveFrom
             });
+        });
+    }
+    private void ConfigureEmployeeRequest(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EmployeeRequest>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.EmployeeId)
+                  .IsRequired();
+
+            entity.Property(x => x.Type)
+                  .IsRequired()
+                  .HasConversion<string>();
+
+            entity.Property(x => x.Status)
+                  .IsRequired()
+                  .HasConversion<string>()
+                  .HasDefaultValue(RequestStatus.Draft);
+
+            entity.Property(x => x.FromDate)
+                  .IsRequired()
+                  .HasColumnType("date");
+
+            entity.Property(x => x.ToDate)
+                  .IsRequired()
+                  .HasColumnType("date");
+
+            entity.Property(x => x.TotalDays)
+                  .HasComputedColumnSql(
+                    "DATEDIFF(DAY, [FromDate], [ToDate]) + 1",
+                    stored: true);
+
+            entity.Property(x => x.Purpose)
+                  .HasMaxLength(2000);
+
+            entity.Property(x => x.AttachmentPath)
+                  .HasMaxLength(1000);
+
+            entity.Property(x => x.Destination)
+                  .HasMaxLength(1000);
+
+            entity.HasOne(x => x.Employee)
+                  .WithMany(x => x.Requests)
+                  .HasForeignKey(x => x.EmployeeId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new
+            {
+                x.EmployeeId,
+                x.Status
+            });
+
+            entity.Property(x => x.RowVersion)
+                  .IsRowVersion();
         });
     }
 }
