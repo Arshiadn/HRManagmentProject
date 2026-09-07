@@ -26,6 +26,8 @@ public sealed class EmployeeContract
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
+    public bool IsActive { get; set; }
+
     public string? Notes { get; set; }
 
     public double? ScoreRate { get; set; }
