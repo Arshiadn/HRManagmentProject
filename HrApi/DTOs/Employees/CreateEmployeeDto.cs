@@ -17,6 +17,9 @@ public class CreateEmployeeDto
 
     [Range(0, 100000, ErrorMessage = "حقوق نامعتبر است")]
     public decimal Salary { get; set; }
+
+    public string PersonnelCode { get; set; } = string.Empty;
+
     public DateTime HireDateFrom { get; set; }
     public DateTime? HireDateTo { get; set; }
 }

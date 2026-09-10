@@ -24,16 +24,19 @@ public class EmployeesApiController : ControllerBase
     private readonly IAttendanceService _attendanceService;
     private readonly IEmployeeShiftAssignmentService _employeeShiftAssignmentService;
     private readonly IEmployeeRequestService _employeeRequestService;
+    private readonly IAssetService _assetService;
     public EmployeesApiController(
         IEmployeeService employeeService,
         IAttendanceService attendanceService,
         IEmployeeShiftAssignmentService employeeShiftAssignmentService,
-        IEmployeeRequestService employeeRequestService)
+        IEmployeeRequestService employeeRequestService,
+        IAssetService assetService)
     {
         _employeeService = employeeService;
         _attendanceService = attendanceService;
         _employeeShiftAssignmentService = employeeShiftAssignmentService;
         _employeeRequestService = employeeRequestService;
+        _assetService = assetService;
     }
     [HttpGet]
     public ActionResult<List<EmployeeListDto>> GetAll()
@@ -224,6 +227,18 @@ public class EmployeesApiController : ControllerBase
         .GetById(
             id,
             cancellationToken);
+
+        return Ok(result);
+    }
+    [HttpGet("{id:int}/assets")]
+    public async Task<IActionResult> GetAssets(
+    int id,
+    CancellationToken cancellationToken)
+    {
+        var result = await _assetService
+            .GetEmployeeAssetsAsync(
+                id,
+                cancellationToken);
 
         return Ok(result);
     }

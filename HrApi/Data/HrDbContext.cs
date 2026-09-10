@@ -20,6 +20,8 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<AttendanceRecord> AttendanceRecords { get; set; }
     public DbSet<EmployeeShiftAssignment> ShiftAssignments { get; set; }
     public DbSet<EmployeeRequest> EmployeeRequests { get; set; }
+    public DbSet<AssetAssignment> AssetAssignments { get; set; }
+    public DbSet<CompanyAsset> CompanyAssets { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +35,8 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
         ConfigureAttendanceRecord(modelBuilder);
         ConfigureShiftAssignment(modelBuilder);
         ConfigureEmployeeRequest(modelBuilder);
+        ConfigureCompanyAsset(modelBuilder);
+        ConfigureAssetAssignment(modelBuilder);
     }
 
     private void ConfigureEmployee(ModelBuilder modelbuilder)
@@ -304,6 +308,76 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
 
             entity.Property(x => x.RowVersion)
                   .IsRowVersion();
+        });
+    }
+    private void ConfigureCompanyAsset(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CompanyAsset>(entity =>
+        {
+            entity.ToTable("CompanyAssets");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.AssetCode)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.HasIndex(x => x.AssetCode)
+                .IsUnique();
+
+            entity.Property(x => x.Title)
+                .IsRequired()
+                .HasMaxLength(150);
+
+            entity.Property(x => x.SerialNumber)
+                .HasMaxLength(100);
+
+            entity.HasIndex(x => x.SerialNumber)
+                .IsUnique()
+                .HasFilter("[SerialNumber] IS NOT NULL");
+
+            entity.Property(x => x.Type)
+                .IsRequired();
+
+            entity.Property(x => x.Status)
+                .IsRequired();
+
+            entity.Property(x => x.RowVersion)
+                .IsRowVersion();
+        });
+    }
+    private void ConfigureAssetAssignment(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AssetAssignment>(entity =>
+        {
+            entity.ToTable("AssetAssignments");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.AssignedAt)
+                .IsRequired();
+
+            entity.Property(x => x.AssignmentNote)
+                .HasMaxLength(500);
+
+            entity.Property(x => x.ReturnNote)
+                .HasMaxLength(500);
+
+            entity.HasOne(x => x.Asset)
+                .WithMany(x => x.Assignments)
+                .HasForeignKey(x => x.AssetId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Employee)
+                .WithMany()
+                .HasForeignKey(x => x.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => new
+            {
+                x.AssetId,
+                x.AssignedAt
+            });
         });
     }
 }

@@ -83,6 +83,7 @@ builder.Services.AddScoped<IRequestPolicy, AnnualLeavePolicy>();
 builder.Services.AddScoped<IRequestPolicy, SickLeavePolicy>();
 builder.Services.AddScoped<IRequestPolicy, MissionPolicy>();
 builder.Services.AddScoped<ILeaveBalanceService, LeaveBalanceService>();
+builder.Services.AddScoped<IAssetService, AssetService>();
 builder.Services.AddScoped<RequestPolicyResolver>();
 builder.Services.AddScoped<PayrollService>();
 builder.Services.Configure<TimeSettings>(builder.Configuration.GetSection("TimeSettings"));
