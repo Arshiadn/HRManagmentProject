@@ -1,7 +1,11 @@
 ﻿using HrApi.Enums.Request;
 using HrApi.Models;
+using HrApi.Models.Performance.Audit;
+using HrApi.Models.Performance.Review;
+using HrApi.Models.Performance.Rubric;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace HrApi.Data;
 
@@ -22,6 +26,12 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<EmployeeRequest> EmployeeRequests { get; set; }
     public DbSet<AssetAssignment> AssetAssignments { get; set; }
     public DbSet<CompanyAsset> CompanyAssets { get; set; }
+    public DbSet<PerformanceReview> PerformanceReviews { get; set; }
+    public DbSet<ReviewPeriod> ReviewPeriods { get; set; }
+    public DbSet<ReviewScore> ReviewScores { get; set; }
+    public DbSet<ReviewRubric> ReviewRubrics { get; set; }
+    public DbSet<RubricCriterion> RubricCriteria { get; set; }
+    public DbSet<ReviewAuditEntry> ReviewAuditEntries { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -37,9 +47,15 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
         ConfigureEmployeeRequest(modelBuilder);
         ConfigureCompanyAsset(modelBuilder);
         ConfigureAssetAssignment(modelBuilder);
+        ConfigurePerformanceReview(modelBuilder);
+        ConfigureReviewPeriod(modelBuilder);
+        ConfigureReviewScore(modelBuilder);
+        ConfigureReviewRubric(modelBuilder);
+        ConfigureRubricCriterion(modelBuilder);
+        ConfigureReviewAuditEntry(modelBuilder);
     }
 
-    private void ConfigureEmployee(ModelBuilder modelbuilder)
+    private static void ConfigureEmployee(ModelBuilder modelbuilder)
     {
         modelbuilder.Entity<Employee>(entity =>
         {
@@ -56,7 +72,7 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
                   .OnDelete(DeleteBehavior.Restrict);
         });
     }
-    private void ConfigureDepartment(ModelBuilder modelbuilder)
+    private static void ConfigureDepartment(ModelBuilder modelbuilder)
     {
         modelbuilder.Entity<Department>(entity =>
         {
@@ -74,7 +90,7 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
             entity.HasQueryFilter(d => !d.IsDeleted);
         });
     }
-    private void ConfigureCandidate(ModelBuilder modelBuilder)
+    private static void ConfigureCandidate(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Candidate>(entity =>
         {
@@ -105,7 +121,7 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
             .OnDelete(DeleteBehavior.Restrict);
         });
     }
-    private void ConfigureEmployeeContract(ModelBuilder modelBuilder)
+    private static void ConfigureEmployeeContract(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<EmployeeContract>(entity =>
         {
@@ -152,7 +168,7 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
-    private void ConfigureShift(ModelBuilder modelBuilder)
+    private static void ConfigureShift(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Shift>(entity =>
         {
@@ -183,7 +199,7 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
             });
         });
     }
-    private void ConfigureAttendanceRecord(ModelBuilder modelBuilder)
+    private static void ConfigureAttendanceRecord(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AttendanceRecord>(entity =>
         {
@@ -226,7 +242,7 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
                   .OnDelete(DeleteBehavior.Restrict);
         });
     }
-    private void ConfigureShiftAssignment(ModelBuilder modelBuilder)
+    private static void ConfigureShiftAssignment(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<EmployeeShiftAssignment>(entity =>
         {
@@ -255,7 +271,7 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
             });
         });
     }
-    private void ConfigureEmployeeRequest(ModelBuilder modelBuilder)
+    private static void ConfigureEmployeeRequest(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<EmployeeRequest>(entity =>
         {
@@ -310,7 +326,7 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
                   .IsRowVersion();
         });
     }
-    private void ConfigureCompanyAsset(ModelBuilder modelBuilder)
+    private static void ConfigureCompanyAsset(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CompanyAsset>(entity =>
         {
@@ -346,7 +362,7 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
                 .IsRowVersion();
         });
     }
-    private void ConfigureAssetAssignment(ModelBuilder modelBuilder)
+    private static void ConfigureAssetAssignment(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AssetAssignment>(entity =>
         {
@@ -377,6 +393,204 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
             {
                 x.AssetId,
                 x.AssignedAt
+            });
+        });
+    }
+    private static void ConfigurePerformanceReview(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PerformanceReview>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.Status)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+            entity.Property(x => x.EmployeeComment)
+            .HasMaxLength(2000);
+
+            entity.Property(x => x.RubricSnapshotJson)
+            .HasColumnType("nvarchar(max)");
+
+            entity.Property(x => x.OverallScore)
+            .HasPrecision(5, 2);
+
+            entity.Property(x => x.RowVersion)
+            .IsRowVersion();
+
+            // ReviewPeriod relationship
+
+            entity.HasOne<ReviewPeriod>()
+            .WithMany()
+            .HasForeignKey(x => x.ReviewPeriodId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            // ReviewRubric relationship
+
+            entity.HasOne<ReviewRubric>()
+            .WithMany()
+            .HasForeignKey(x => x.ReviewRubricId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            // Employee relationship
+
+            entity.HasOne<Employee>()
+                .WithMany()
+                .HasForeignKey(x => x.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ReviewScores relationship
+
+            entity.HasMany(x => x.Scores)
+            .WithOne(x => x.PerformanceReview)
+            .HasForeignKey(x => x.PerformanceReviewId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(x => new
+            {
+                x.ReviewPeriodId,
+                x.EmployeeId
+            })
+            .IsUnique();
+        });
+    }
+    private static void ConfigureReviewScore(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ReviewScore>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.CriterionCode)
+            .HasMaxLength(50)
+            .IsRequired();
+
+            entity.Property(x => x.Score)
+            .IsRequired();
+
+            entity.Property(x => x.Comment)
+            .HasMaxLength(1000);
+
+            entity.HasIndex(x => new
+            {
+                x.PerformanceReviewId,
+                x.CriterionCode
+            });
+        });
+    }
+    private static void ConfigureReviewPeriod(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ReviewPeriod>(entity => 
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.Title)
+            .HasMaxLength(200)
+            .IsRequired();
+
+            entity.Property(x => x.StartsOn)
+            .IsRequired();
+
+            entity.Property(x => x.EndsOn)
+            .IsRequired();
+
+            entity.Property(x => x.IsClosed)
+            .IsRequired();
+
+            entity.HasOne(x => x.SelectedRubric)
+            .WithMany()
+            .HasForeignKey(x => x.SelectedRubricId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => x.StartsOn);
+
+            entity.HasIndex(x => x.EndsOn);
+        });
+    }
+    private static void ConfigureReviewRubric(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ReviewRubric>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.Version)
+            .IsRequired();
+
+            entity.Property(x => x.Name)
+            .HasMaxLength(200)
+            .IsRequired();
+
+            entity.HasIndex(x => new
+            {
+                x.Name,
+                x.Version
+            })
+            .IsUnique();
+        });
+    }
+    private static void ConfigureRubricCriterion(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<RubricCriterion>(entity =>
+        {
+            entity.HasKey(x => new
+            {
+                x.ReviewRubricId,
+                x.Code
+            });
+
+            entity.Property(x => x.Code)
+            .HasMaxLength(50)
+            .IsRequired();
+
+            entity.Property(x => x.Weight)
+            .HasPrecision(5, 2)
+            .IsRequired();
+
+            entity.HasOne(x => x.ReviewRubric)
+            .WithMany(x => x.Criteria)
+            .HasForeignKey(x => x.ReviewRubricId)
+            .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+    private static void ConfigureReviewAuditEntry(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ReviewAuditEntry>(entity =>
+        {
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.Action)
+            .HasMaxLength(100)
+            .IsRequired();
+
+            entity.Property(x => x.FromStatus)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+            entity.Property(x => x.ToStatus)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+            entity.Property(x => x.ActorType)
+            .HasMaxLength(50)
+            .IsRequired();
+
+            entity.Property(x => x.Reason)
+                .HasMaxLength(1000);
+
+            entity.Property(x => x.OccurredAt)
+             .IsRequired();
+
+            // PerformanceReview 1 -> Many ReviewAuditEntries
+
+            entity.HasOne(x => x.PerformanceReview)
+            .WithMany()
+            .HasForeignKey(x => x.PerformanceReviewId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(x => new
+            {
+                x.PerformanceReviewId,
+                x.OccurredAt
             });
         });
     }

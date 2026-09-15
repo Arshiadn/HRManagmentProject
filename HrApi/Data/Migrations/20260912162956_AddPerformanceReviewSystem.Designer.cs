@@ -5,6 +5,7 @@ using HrApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -12,9 +13,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HrApi.Migrations
 {
     [DbContext(typeof(HrDbContext))]
-    partial class HrDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260912162956_AddPerformanceReviewSystem")]
+    partial class AddPerformanceReviewSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -648,6 +651,35 @@ namespace HrApi.Migrations
                     b.ToTable("ReviewAuditEntries");
                 });
 
+            modelBuilder.Entity("HrApi.Models.Performance.Response.ReviewEmployeeResponse", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("Acknowledged")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<Guid>("PerformanceReviewId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("RespondedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PerformanceReviewId")
+                        .IsUnique();
+
+                    b.ToTable("ReviewEmployeeResponses");
+                });
+
             modelBuilder.Entity("HrApi.Models.Performance.Review.PerformanceReview", b =>
                 {
                     b.Property<Guid>("Id")
@@ -725,9 +757,6 @@ namespace HrApi.Migrations
                     b.Property<bool>("IsClosed")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("SelectedRubricId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateOnly>("StartsOn")
                         .HasColumnType("date");
 
@@ -739,8 +768,6 @@ namespace HrApi.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EndsOn");
-
-                    b.HasIndex("SelectedRubricId");
 
                     b.HasIndex("StartsOn");
 
@@ -788,12 +815,15 @@ namespace HrApi.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<Guid>("ReviewPeriodId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Version")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name", "Version")
+                    b.HasIndex("ReviewPeriodId", "Version")
                         .IsUnique();
 
                     b.ToTable("ReviewRubrics");
@@ -1145,6 +1175,15 @@ namespace HrApi.Migrations
                     b.Navigation("PerformanceReview");
                 });
 
+            modelBuilder.Entity("HrApi.Models.Performance.Response.ReviewEmployeeResponse", b =>
+                {
+                    b.HasOne("HrApi.Models.Performance.Review.PerformanceReview", null)
+                        .WithOne()
+                        .HasForeignKey("HrApi.Models.Performance.Response.ReviewEmployeeResponse", "PerformanceReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("HrApi.Models.Performance.Review.PerformanceReview", b =>
                 {
                     b.HasOne("HrApi.Models.Employee", null)
@@ -1182,16 +1221,6 @@ namespace HrApi.Migrations
                     b.Navigation("ReviewRubric");
                 });
 
-            modelBuilder.Entity("HrApi.Models.Performance.Review.ReviewPeriod", b =>
-                {
-                    b.HasOne("HrApi.Models.Performance.Rubric.ReviewRubric", "SelectedRubric")
-                        .WithMany()
-                        .HasForeignKey("SelectedRubricId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("SelectedRubric");
-                });
-
             modelBuilder.Entity("HrApi.Models.Performance.Review.ReviewScore", b =>
                 {
                     b.HasOne("HrApi.Models.Performance.Review.PerformanceReview", "PerformanceReview")
@@ -1201,6 +1230,17 @@ namespace HrApi.Migrations
                         .IsRequired();
 
                     b.Navigation("PerformanceReview");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Performance.Rubric.ReviewRubric", b =>
+                {
+                    b.HasOne("HrApi.Models.Performance.Review.ReviewPeriod", "ReviewPeriod")
+                        .WithMany("Rubrics")
+                        .HasForeignKey("ReviewPeriodId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ReviewPeriod");
                 });
 
             modelBuilder.Entity("HrApi.Models.Performance.Rubric.RubricCriterion", b =>
@@ -1312,6 +1352,11 @@ namespace HrApi.Migrations
             modelBuilder.Entity("HrApi.Models.Performance.Review.PerformanceReview", b =>
                 {
                     b.Navigation("Scores");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Performance.Review.ReviewPeriod", b =>
+                {
+                    b.Navigation("Rubrics");
                 });
 
             modelBuilder.Entity("HrApi.Models.Performance.Rubric.ReviewRubric", b =>

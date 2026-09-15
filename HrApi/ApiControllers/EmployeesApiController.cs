@@ -2,6 +2,7 @@
 using HrApi.DTOs.Attendance;
 using HrApi.DTOs.Employees;
 using HrApi.DTOs.Paging;
+using HrApi.DTOs.Reviews.PerformanceReview;
 using HrApi.DTOs.ShiftAssignment;
 using HrApi.Interfaces;
 using HrApi.Models;
@@ -25,18 +26,21 @@ public class EmployeesApiController : ControllerBase
     private readonly IEmployeeShiftAssignmentService _employeeShiftAssignmentService;
     private readonly IEmployeeRequestService _employeeRequestService;
     private readonly IAssetService _assetService;
+    private readonly IReviewService _reviewService;
     public EmployeesApiController(
         IEmployeeService employeeService,
         IAttendanceService attendanceService,
         IEmployeeShiftAssignmentService employeeShiftAssignmentService,
         IEmployeeRequestService employeeRequestService,
-        IAssetService assetService)
+        IAssetService assetService,
+        IReviewService reviewService)
     {
         _employeeService = employeeService;
         _attendanceService = attendanceService;
         _employeeShiftAssignmentService = employeeShiftAssignmentService;
         _employeeRequestService = employeeRequestService;
         _assetService = assetService;
+        _reviewService = reviewService;
     }
     [HttpGet]
     public ActionResult<List<EmployeeListDto>> GetAll()
@@ -241,5 +245,25 @@ public class EmployeesApiController : ControllerBase
                 cancellationToken);
 
         return Ok(result);
+    }
+    [HttpGet("{employeeId:int}/performance-reviews")]
+    public async Task<IActionResult> GetEmployeePerformanceReviews(
+        int employeeId,
+        CancellationToken cancellationToken)
+    {
+        var history = await _reviewService
+            .GetEmployeePerformanceReviewsAsync(
+                employeeId,
+                cancellationToken);
+
+        var response = new ApiResponse<
+            List<PerformanceReviewHistoryDto>>
+        {
+            Success = true,
+            Message = "Employee Performance Review History",
+            Data = history
+        };
+
+        return Ok(response);
     }
 }

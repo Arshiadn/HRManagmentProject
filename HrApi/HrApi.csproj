@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Models\Performance\Response\" />
     <Folder Include="ViewModels\Department\" />
     <Folder Include="Views\Department\" />
   </ItemGroup>

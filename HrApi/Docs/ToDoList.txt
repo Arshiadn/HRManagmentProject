@@ -15,8 +15,11 @@
 10*: add hire date to employee model and it's dtos(done)
 10**: add Phone Number Property to Employee and it's needed Dtos
 10***: test and fix any bug if apear(?) (done)
-11*: Add needed roles
 12: test Contract State machine(done)
 13: Create Order: => shift then attendance then employee APIs (done)
 14: test Shift and Attendance APIs (done)
-15: test session 43 APIs scenario
+15: test session 43 APIs scenario(done)
+11*: Add needed roles
+16: search about Indexing
+17: check and test session 44 APIs and services and scenarios
+18: clean the whole project
