@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.Contracts;
+using HrApi.Models.Skill;
 
 namespace HrApi.Models;
 
@@ -20,6 +21,10 @@ public class Employee
 
     public int DepartmentId { get; set; }
     public Department Department { get; set; } = null!;
+
+    public int PositionId { get; set; }
+    public Position Position { get; set; } = null!;
+    
     public ICollection<EmployeeContract> Contracts { get; set; } 
         = new List<EmployeeContract>();
     public ICollection<AttendanceRecord> AttendanceRecords { get; set; }
@@ -28,4 +33,7 @@ public class Employee
         = new List<EmployeeShiftAssignment>();
     public ICollection<EmployeeRequest> Requests { get; set; }
         = new List<EmployeeRequest>();
+
+    public ICollection<EmployeeSkillState> SkillStates { get; set; }
+        = new List<EmployeeSkillState>();
 }

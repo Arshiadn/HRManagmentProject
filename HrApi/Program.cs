@@ -3,6 +3,7 @@ using HrApi.Data.Services;
 using HrApi.Exceptions;
 using HrApi.Interfaces;
 using HrApi.Models;
+using HrApi.Models.Skill;
 using HrApi.Policies;
 using HrApi.Policies.Request;
 using HrApi.Repositories;
@@ -20,6 +21,7 @@ using Serilog;
 using Serilog.Events;
 using System.Runtime;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +63,12 @@ builder.Services.AddControllers()
 
                         return new BadRequestObjectResult(problem);
                     };
+                })
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(
+                        new JsonStringEnumConverter()
+                    );
                 });
 builder.Services.AddControllersWithViews();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -85,6 +93,14 @@ builder.Services.AddScoped<IRequestPolicy, MissionPolicy>();
 builder.Services.AddScoped<ILeaveBalanceService, LeaveBalanceService>();
 builder.Services.AddScoped<IAssetService, AssetService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IPositionService, PositionService>();
+builder.Services.AddScoped<IPositionSkillService, PositionSkillService>();
+builder.Services.AddScoped<IEmployeeSkillClaimService, EmployeeSkillClaimService>();
+builder.Services.AddScoped<ISkillEvidenceService, SkillEvidenceService>();
+builder.Services.AddScoped<ISkillService, SkillService>();
+builder.Services.AddScoped<ISkillAssessmentService, SkillAssessmentService>();
+builder.Services.AddScoped<ISkillMatrixService, SkillMatrixService>();
+builder.Services.AddScoped<ISkillStateHistoryService, SkillStateHistoryService>();
 builder.Services.AddScoped<RequestPolicyResolver>();
 builder.Services.AddScoped<PayrollService>();
 builder.Services.Configure<TimeSettings>(builder.Configuration.GetSection("TimeSettings"));

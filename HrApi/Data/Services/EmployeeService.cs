@@ -19,15 +19,18 @@ public class EmployeeService : IEmployeeService
     private readonly IMapper _mapper;
     private readonly IFileStorageService _fileStorage;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ICurrentUserService _currentUserService;
     public EmployeeService(HrDbContext context,
         IMapper mapper,
         IFileStorageService fileStorage,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        ICurrentUserService currentUserService)
     {
         _context = context;
         _mapper = mapper;
         _fileStorage = fileStorage;
         _httpContextAccessor = httpContextAccessor;
+        _currentUserService = currentUserService;
     }
     public List<EmployeeListDto> GetAll()
     {
@@ -52,6 +55,15 @@ public class EmployeeService : IEmployeeService
         if (emailExists)
         {
             throw new ConflictException("Email already exists");
+        }
+
+        var position = _context.Positions
+        .FirstOrDefaultAsync(
+            p => p.Id == model.PositionId && p.IsActive);
+
+        if (position == null)
+        {
+            throw new NotFoundException("Position not found.");
         }
         var employee = _mapper.Map<Employee>(model);
         employee.IsActive = true;
@@ -376,5 +388,29 @@ public class EmployeeService : IEmployeeService
             TotalPages = (int)Math.Ceiling(
                 totalItems / (double)request.PageSize)
         };
+    }
+    public async Task<EmployeeDetailsDto?> GetMyProfileAsync(CancellationToken cancellationToken)
+    {
+        var employeeId = _currentUserService.EmployeeId;
+
+        if(!employeeId.HasValue)
+            throw new  NotFoundException(
+                $"Employee ID : {employeeId} not found."
+            );
+
+        return await _context.Employees
+            .AsNoTracking()
+            .Where(e => e.Id == employeeId.Value)
+            .Select(e => new EmployeeDetailsDto
+            {
+                Id = e.Id,
+                FullName = e.FullName,
+                Email = e.Email,
+                PersonnelCode = e.PersonnelCode,
+                Salary = e.Salary,
+                HireDateFrom = e.HireDateFrom,
+                HireDateTo = e.HireDateTo
+            })
+            .FirstOrDefaultAsync(cancellationToken);
     }
 }

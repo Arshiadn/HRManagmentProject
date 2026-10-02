@@ -43,10 +43,20 @@ public class AuthApiController : ControllerBase
         var roles = await _userManager.GetRolesAsync(user);
 
         var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, user.Id),
-        new Claim(ClaimTypes.Name, user.UserName!)
-    };
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Name, user.UserName!)
+        };
+
+        if (user.EmployeeId.HasValue)
+        {
+            claims.Add(
+                new Claim(
+                    "EmployeeId",
+                    user.EmployeeId.Value.ToString()
+                )
+            );
+        }
 
         foreach (var role in roles)
         {

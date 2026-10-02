@@ -23,6 +23,21 @@ namespace HrApi.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("EmployeeSkillClaimEvidence", b =>
+                {
+                    b.Property<long>("EmployeeSkillClaimId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SkillEvidenceId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("EmployeeSkillClaimId", "SkillEvidenceId");
+
+                    b.HasIndex("SkillEvidenceId");
+
+                    b.ToTable("EmployeeSkillClaimEvidence");
+                });
+
             modelBuilder.Entity("HrApi.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -41,6 +56,9 @@ namespace HrApi.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<int?>("EmployeeId")
+                        .HasColumnType("int");
 
                     b.Property<string>("FullName")
                         .HasColumnType("nvarchar(max)");
@@ -82,6 +100,10 @@ namespace HrApi.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique()
+                        .HasFilter("[EmployeeId] IS NOT NULL");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -405,6 +427,9 @@ namespace HrApi.Migrations
                     b.Property<string>("PhotoPath")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("PositionId")
+                        .HasColumnType("int");
+
                     b.Property<string>("ProfileImagePath")
                         .HasColumnType("nvarchar(max)");
 
@@ -417,6 +442,8 @@ namespace HrApi.Migrations
 
                     b.HasIndex("PersonnelCode")
                         .IsUnique();
+
+                    b.HasIndex("PositionId");
 
                     b.ToTable("Hr_Employees", (string)null);
                 });
@@ -817,6 +844,34 @@ namespace HrApi.Migrations
                     b.ToTable("RubricCriteria");
                 });
 
+            modelBuilder.Entity("HrApi.Models.Position", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Title")
+                        .IsUnique();
+
+                    b.ToTable("Positions", (string)null);
+                });
+
             modelBuilder.Entity("HrApi.Models.RecruitmentStageHistory", b =>
                 {
                     b.Property<int>("Id")
@@ -889,6 +944,313 @@ namespace HrApi.Migrations
                         .IsUnique();
 
                     b.ToTable("Shifts", (string)null);
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.EmployeeSkillClaim", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("ClaimedLevel")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("SkillId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SkillId");
+
+                    b.HasIndex("EmployeeId", "SkillId");
+
+                    b.ToTable("EmployeeSkillClaims");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.EmployeeSkillState", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CurrentLevel")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SkillId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("SkillId", "EmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeSkillStates");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.PositionSkill", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PositionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RequiredLevel")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SkillId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SkillId");
+
+                    b.HasIndex("PositionId", "SkillId")
+                        .IsUnique();
+
+                    b.ToTable("PositionSkills");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.PositionSkillHistory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ChangedByUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("NewRequiredLevel")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OldRequiredLevel")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PositionSkillId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PositionSkillId");
+
+                    b.ToTable("PositionSkillHistories");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.Skill", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Title")
+                        .IsUnique();
+
+                    b.ToTable("Skills");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.SkillAssessment", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("AssessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AssessorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("int");
+
+                    b.Property<long>("SkillClaimId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SkillClaimId")
+                        .IsUnique();
+
+                    b.ToTable("SkillAssessments");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.SkillEvidence", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("IssuedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SkillId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("SkillId", "EmployeeId");
+
+                    b.ToTable("SkillEvidences");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.SkillEvidenceHistory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ChangedByUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("NewExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("NewIssuedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("NewType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("OldExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("OldIssuedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("OldType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<long>("SkillEvidenceId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SkillEvidenceId");
+
+                    b.ToTable("EvidenceHistories");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.SkillStateHistory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("FromLevel")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<long?>("SkillAssessmentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SkillId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ToLevel")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SkillAssessmentId");
+
+                    b.HasIndex("SkillId");
+
+                    b.HasIndex("EmployeeId", "SkillId");
+
+                    b.ToTable("SkillStateHistories");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -1024,6 +1386,31 @@ namespace HrApi.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("EmployeeSkillClaimEvidence", b =>
+                {
+                    b.HasOne("HrApi.Models.Skill.EmployeeSkillClaim", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeSkillClaimId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HrApi.Models.Skill.SkillEvidence", null)
+                        .WithMany()
+                        .HasForeignKey("SkillEvidenceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HrApi.Models.ApplicationUser", b =>
+                {
+                    b.HasOne("HrApi.Models.Employee", "Employee")
+                        .WithOne()
+                        .HasForeignKey("HrApi.Models.ApplicationUser", "EmployeeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("HrApi.Models.AssetAssignment", b =>
                 {
                     b.HasOne("HrApi.Models.CompanyAsset", "Asset")
@@ -1079,7 +1466,15 @@ namespace HrApi.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("HrApi.Models.Position", "Position")
+                        .WithMany("Employees")
+                        .HasForeignKey("PositionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Department");
+
+                    b.Navigation("Position");
                 });
 
             modelBuilder.Entity("HrApi.Models.EmployeeContract", b =>
@@ -1225,6 +1620,141 @@ namespace HrApi.Migrations
                     b.Navigation("Candidate");
                 });
 
+            modelBuilder.Entity("HrApi.Models.Skill.EmployeeSkillClaim", b =>
+                {
+                    b.HasOne("HrApi.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HrApi.Models.Skill.Skill", "Skill")
+                        .WithMany()
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Skill");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.EmployeeSkillState", b =>
+                {
+                    b.HasOne("HrApi.Models.Employee", "Employee")
+                        .WithMany("SkillStates")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HrApi.Models.Skill.Skill", "Skill")
+                        .WithMany("EmployeeSkillStates")
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Skill");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.PositionSkill", b =>
+                {
+                    b.HasOne("HrApi.Models.Position", "Position")
+                        .WithMany("Skills")
+                        .HasForeignKey("PositionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HrApi.Models.Skill.Skill", "Skill")
+                        .WithMany("Positions")
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Position");
+
+                    b.Navigation("Skill");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.PositionSkillHistory", b =>
+                {
+                    b.HasOne("HrApi.Models.Skill.PositionSkill", "PositionSkill")
+                        .WithMany("History")
+                        .HasForeignKey("PositionSkillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PositionSkill");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.SkillAssessment", b =>
+                {
+                    b.HasOne("HrApi.Models.Skill.EmployeeSkillClaim", "SkillClaim")
+                        .WithMany()
+                        .HasForeignKey("SkillClaimId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SkillClaim");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.SkillEvidence", b =>
+                {
+                    b.HasOne("HrApi.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HrApi.Models.Skill.Skill", "Skill")
+                        .WithMany()
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Skill");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.SkillEvidenceHistory", b =>
+                {
+                    b.HasOne("HrApi.Models.Skill.SkillEvidence", "SkillEvidence")
+                        .WithMany("History")
+                        .HasForeignKey("SkillEvidenceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SkillEvidence");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.SkillStateHistory", b =>
+                {
+                    b.HasOne("HrApi.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HrApi.Models.Skill.SkillAssessment", "SkillAssessment")
+                        .WithMany()
+                        .HasForeignKey("SkillAssessmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HrApi.Models.Skill.Skill", "Skill")
+                        .WithMany()
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Skill");
+
+                    b.Navigation("SkillAssessment");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -1302,6 +1832,8 @@ namespace HrApi.Migrations
                     b.Navigation("Requests");
 
                     b.Navigation("ShiftAssignments");
+
+                    b.Navigation("SkillStates");
                 });
 
             modelBuilder.Entity("HrApi.Models.EmployeeContract", b =>
@@ -1319,9 +1851,33 @@ namespace HrApi.Migrations
                     b.Navigation("Criteria");
                 });
 
+            modelBuilder.Entity("HrApi.Models.Position", b =>
+                {
+                    b.Navigation("Employees");
+
+                    b.Navigation("Skills");
+                });
+
             modelBuilder.Entity("HrApi.Models.Shift", b =>
                 {
                     b.Navigation("EmployeeAssignments");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.PositionSkill", b =>
+                {
+                    b.Navigation("History");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.Skill", b =>
+                {
+                    b.Navigation("EmployeeSkillStates");
+
+                    b.Navigation("Positions");
+                });
+
+            modelBuilder.Entity("HrApi.Models.Skill.SkillEvidence", b =>
+                {
+                    b.Navigation("History");
                 });
 #pragma warning restore 612, 618
         }

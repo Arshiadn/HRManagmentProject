@@ -3,8 +3,10 @@ using HrApi.Models;
 using HrApi.Models.Performance.Audit;
 using HrApi.Models.Performance.Review;
 using HrApi.Models.Performance.Rubric;
+using HrApi.Models.Skill;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Reflection.Emit;
 
 namespace HrApi.Data;
@@ -32,6 +34,16 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ReviewRubric> ReviewRubrics { get; set; }
     public DbSet<RubricCriterion> RubricCriteria { get; set; }
     public DbSet<ReviewAuditEntry> ReviewAuditEntries { get; set; }
+    public DbSet<Position> Positions { get; set;}
+    public DbSet<Skill> Skills { get; set; }
+    public DbSet<PositionSkill> PositionSkills { get; set; }
+    public DbSet<EmployeeSkillState> EmployeeSkillStates { get; set; }
+    public DbSet<SkillEvidence> SkillEvidences { get; set; }
+    public DbSet<SkillAssessment> SkillAssessments { get; set; }
+    public DbSet<SkillStateHistory> SkillStateHistories { get; set; }
+    public DbSet<SkillEvidenceHistory> EvidenceHistories { get; set;}
+    public DbSet<EmployeeSkillClaim> EmployeeSkillClaims { get; set;}
+    public DbSet<PositionSkillHistory> PositionSkillHistories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,6 +65,17 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
         ConfigureReviewRubric(modelBuilder);
         ConfigureRubricCriterion(modelBuilder);
         ConfigureReviewAuditEntry(modelBuilder);
+        ConfigurePosition(modelBuilder);
+        ConfigureApplicationUser(modelBuilder);
+        ConfigureSkill(modelBuilder);
+        ConfigurePositionSkill(modelBuilder);
+        ConfigureEmployeeSkillState(modelBuilder);
+        ConfigureSkillEvidence(modelBuilder);
+        ConfigureSkillAssessment(modelBuilder);
+        ConfigureSkillStateHistory(modelBuilder);
+        ConfigureSkillEvidenceHistory(modelBuilder);
+        ConfigureEmployeeSkillClaim(modelBuilder);
+        ConfigurePositionSkillHistory(modelBuilder);
     }
 
     private static void ConfigureEmployee(ModelBuilder modelbuilder)
@@ -592,6 +615,317 @@ public class HrDbContext : IdentityDbContext<ApplicationUser>
                 x.PerformanceReviewId,
                 x.OccurredAt
             });
+        });
+    }
+    private static void ConfigurePosition(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Position>(entity =>
+        {
+            entity.ToTable("Positions");
+
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.Title)
+            .IsRequired()
+            .HasMaxLength(100);
+
+            entity.Property(p => p.Description)
+            .HasMaxLength(500);
+
+            entity.Property(p => p.IsActive)
+                .IsRequired();
+
+            entity.HasMany(x => x.Employees)
+            .WithOne(x => x.Position)
+            .HasForeignKey(x => x.PositionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(x => x.Title)
+            .IsUnique();
+        });
+    }
+    private static void ConfigureApplicationUser(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ApplicationUser>(entity =>
+        {
+            entity.HasOne(u => u.Employee)
+            .WithOne()
+            .HasForeignKey<ApplicationUser>(u => u.EmployeeId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(u => u.EmployeeId)
+            .IsUnique(); 
+        });
+    }
+    private static void ConfigureSkill(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Skill>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.Property(x => x.Title)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(x => x.Description)
+                .HasMaxLength(500)
+                .IsRequired(false);
+         
+            entity.Property(x => x.IsActive)
+                .IsRequired();
+
+            entity.HasIndex(x => x.Title)
+                .IsUnique();
+        });
+    }
+    private static void ConfigurePositionSkill(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PositionSkill>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.HasOne(x => x.Position)
+                .WithMany(x => x.Skills)
+                .HasForeignKey(x => x.PositionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Skill)
+                .WithMany(x => x.Positions)
+                .HasForeignKey(x => x.SkillId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(x => x.RequiredLevel)
+                .IsRequired();
+
+            entity.HasIndex(x => new
+            {
+                x.PositionId,
+                x.SkillId
+            })
+            .IsUnique();
+        });
+    }
+    private static void ConfigureEmployeeSkillState(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EmployeeSkillState>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.HasOne(x => x.Skill)
+                .WithMany(x => x.EmployeeSkillStates)
+                .HasForeignKey(x => x.SkillId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Employee)
+                .WithMany(x => x.SkillStates)
+                .HasForeignKey(x => x.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(x => x.CurrentLevel)
+                .IsRequired();
+
+            entity.Property(x => x.UpdatedAt)
+                .IsRequired();
+
+            entity.HasIndex(x => new
+            {
+                x.SkillId,
+                x.EmployeeId
+            })
+            .IsUnique();
+        });
+    }
+    private static void ConfigureSkillEvidence(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<SkillEvidence>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.HasOne(x => x.Employee)
+                .WithMany()
+                .HasForeignKey(x => x.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Skill)
+                .WithMany()
+                .HasForeignKey(x => x.SkillId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(x => x.Type)
+                .IsRequired();
+
+            entity.Property(x => x.IssuedAt)
+                .IsRequired();
+
+
+            entity.Property(x => x.ExpiresAt)
+                .IsRequired(false);
+
+            entity.HasIndex(x => new
+            {
+                x.SkillId,
+                x.EmployeeId
+            });
+        });
+    }
+    private static void ConfigureSkillAssessment(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<SkillAssessment>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.HasOne(x => x.SkillClaim)
+                .WithMany()
+                .HasForeignKey(x => x.SkillClaimId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(x => x.Decision)
+                .IsRequired();
+
+            entity.Property(x => x.AssessorId)
+                .IsRequired();
+
+            entity.Property(x => x.Comment)
+                .HasMaxLength(1000);
+
+            entity.Property(x => x.AssessedAt)
+                .IsRequired();
+
+            entity.HasIndex(x => x.SkillClaimId)
+                .IsUnique();
+        });
+    }
+    private static void ConfigureSkillStateHistory(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<SkillStateHistory>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.HasOne(x => x.Employee)
+                .WithMany()
+                .HasForeignKey(x => x.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Skill)
+                .WithMany()
+                .HasForeignKey(x => x.SkillId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.SkillAssessment)
+                .WithMany()
+                .HasForeignKey(x => x.SkillAssessmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(x => x.Reason)
+                .HasMaxLength(500);
+
+            entity.Property(x => x.OccurredAt)
+                .IsRequired();
+
+            entity.HasIndex(x => new
+            {
+                x.EmployeeId,
+                x.SkillId
+            });
+        });
+    }
+    private static void ConfigureSkillEvidenceHistory(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<SkillEvidenceHistory>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.HasOne(x => x.SkillEvidence)
+                .WithMany(x => x.History)
+                .HasForeignKey(x => x.SkillEvidenceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(x => x.Reason)
+                .IsRequired()
+                .HasMaxLength(500);
+
+            entity.Property(x => x.ChangedByUserId)
+                .IsRequired();
+
+            entity.Property(x => x.ChangedAt)
+                .IsRequired();
+        });
+    }
+    private static void ConfigureEmployeeSkillClaim(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EmployeeSkillClaim>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.HasOne(x => x.Employee)
+                .WithMany()
+                .HasForeignKey(x => x.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Skill)
+                .WithMany()
+                .HasForeignKey(x => x.SkillId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(x => x.Evidence)
+                .WithMany(x => x.Claims)
+                .UsingEntity<Dictionary<string, object>>(
+                    "EmployeeSkillClaimEvidence",
+                    right => right
+                        .HasOne<SkillEvidence>()
+                        .WithMany()
+                        .HasForeignKey("SkillEvidenceId")
+                        .OnDelete(DeleteBehavior.Restrict),
+                    left => left
+                        .HasOne<EmployeeSkillClaim>()
+                        .WithMany()
+                        .HasForeignKey("EmployeeSkillClaimId")
+                        .OnDelete(DeleteBehavior.Restrict),
+                    join =>
+                    {
+                        join.HasKey(
+                            "EmployeeSkillClaimId",
+                            "SkillEvidenceId");
+                    });
+
+            entity.Property(x => x.ClaimedLevel)
+                .IsRequired();
+
+            entity.Property(x => x.CreatedAt)
+                .IsRequired();
+
+            entity.HasIndex(x => new
+            {
+                x.EmployeeId,
+                x.SkillId
+            });
+        });
+    }
+    private static void ConfigurePositionSkillHistory(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PositionSkillHistory>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+
+            entity.HasOne(x => x.PositionSkill)
+                .WithMany(x => x.History)
+                .HasForeignKey(x => x.PositionSkillId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(x => x.OldRequiredLevel)
+                .IsRequired();
+
+            entity.Property(x => x.NewRequiredLevel)
+                .IsRequired();
+
+            entity.Property(x => x.Reason)
+                .IsRequired();
+
+            entity.Property(x => x.ChangedByUserId)
+                .IsRequired();
+
+            entity.Property(x => x.ChangedAt)
+                .IsRequired();
         });
     }
 }

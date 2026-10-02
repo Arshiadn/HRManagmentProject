@@ -10,16 +10,19 @@ public static class DbSeeder
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-        string adminRole = "Admin";
+        string[] roles =
+        {
+            "Admin",
+            "HRManager",
+            "Manager",
+            "Employee",
+            "User"
+        };
 
-        if (!await roleManager.RoleExistsAsync(adminRole))
+        foreach( var role in roles)
         {
-            await roleManager.CreateAsync(new IdentityRole(adminRole));
-        }
-        string userRole = "User";
-        if(!await roleManager.RoleExistsAsync(userRole))
-        {
-            await roleManager.CreateAsync(new IdentityRole(userRole));
+            if(!await roleManager.RoleExistsAsync(role))
+                await roleManager.CreateAsync(new IdentityRole(role));
         }
 
         string adminEmail = "admin@test.com";
@@ -41,7 +44,7 @@ public static class DbSeeder
             var result = await userManager.CreateAsync(newAdmin, adminPassword);
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(newAdmin, adminRole);
+                await userManager.AddToRoleAsync(newAdmin, "َAdmin");
             }
         }
     }

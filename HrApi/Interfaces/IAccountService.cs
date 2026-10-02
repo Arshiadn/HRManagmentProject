@@ -5,7 +5,10 @@ namespace HrApi.Interfaces;
 
 public interface IAccountService
 {
-    Task<AuthResultDto> RegisterAsync(RegisterViewModel model);
+    Task<AuthResultDto> RegisterAsync(
+    RegisterViewModel model, CancellationToken cancellationToken);
+
     Task<AuthResultDto> LoginAsync(LoginViewModel model);
+    
     Task LogoutAsync();
 }

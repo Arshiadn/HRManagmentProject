@@ -15,12 +15,15 @@ public sealed class AttendanceService : IAttendanceService
 {
     private readonly HrDbContext _context;
     private readonly TimeZoneInfo _companyTimeZone;
+    private readonly ICurrentUserService _currentUserService;
     public AttendanceService(
-        HrDbContext context)
+        HrDbContext context,
+        ICurrentUserService currentUserService)
     {
         _context = context;
         _companyTimeZone =
             TimeZoneInfo.FindSystemTimeZoneById("Asia/Tehran");
+        _currentUserService = currentUserService;
     }
 
     public async Task<AttendanceDailyDto> CheckIn(
@@ -157,6 +160,15 @@ public sealed class AttendanceService : IAttendanceService
         AttendanceListRequestDto request,
         CancellationToken cancellationToken)
     {
+        if (_currentUserService.IsInRole("Employee"))
+        {
+            if (_currentUserService.EmployeeId != employeeId)
+            {
+                throw new BusinessRuleException (
+                    "You can only access your own attendance.");
+            }
+        }
+
         var query = _context.AttendanceRecords
             .AsNoTracking()
             .Where(x => x.EmployeeId == employeeId);

@@ -22,4 +22,8 @@ public class RegisterViewModel
     [DataType(DataType.Password)]
     [Compare("Password", ErrorMessage = "رمز عبور و تکرار آن یکسان نیستند")]
     public string ConfirmPassword { get; set; }
+
+    [Required]
+    [Range(1, int.MaxValue, ErrorMessage = "آیدی کارمند باید مثبت باشد")]
+    public int EmployeeId { get; set; }
 }

@@ -17,7 +17,6 @@ namespace HrApi.Controllers;
 
 [ApiController]
 [Route("api/employee")]
-[AllowAnonymous]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 public class EmployeesApiController : ControllerBase
 {
@@ -43,12 +42,14 @@ public class EmployeesApiController : ControllerBase
         _reviewService = reviewService;
     }
     [HttpGet]
+    [Authorize(Roles = "Admin,HRManager")]
     public ActionResult<List<EmployeeListDto>> GetAll()
     {
         var result = _employeeService.GetAll();
         return Ok(result);
     }
     [HttpGet("{id:int}")]
+    [Authorize(Roles = "Admin,HRManager")]
     public ActionResult<ApiResponse<EmployeeDetailsDto?>> GetById(int id)
     {
         var employee = _employeeService.GetById(id);
@@ -69,6 +70,7 @@ public class EmployeesApiController : ControllerBase
         });
     }
     [HttpPost]
+    [Authorize(Roles = "Admin,HRManager")]
     public ActionResult<EmployeeDetailsDto> Create([FromBody] CreateEmployeeDto model)
     {
             var result = _employeeService.Create(model);
@@ -79,18 +81,21 @@ public class EmployeesApiController : ControllerBase
     }
     //authorize by Hr Manager and admin
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,HRManager")]
     public IActionResult Update(int id, UpdateEmployeeDto model)
     {
             _employeeService.Update(id, model);
             return NoContent();
     }
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin,HRManager")]
     public IActionResult Delete(int id)
     {
             _employeeService.Delete(id);
             return NoContent();
     }
     [HttpGet("search")]
+    [Authorize(Roles = "Admin,HRManager")]
     public async Task<IActionResult> Search([FromQuery]EmployeeSearchRequestDto request)
     {
         var result = await _employeeService.Search(request);
@@ -101,8 +106,10 @@ public class EmployeesApiController : ControllerBase
             Data = result
         });
     }
+    // update later: this should be only for employee role
     [HttpPost("{id:int}/photo")]
     [Consumes("multipart/form-data")]
+    [Authorize(Roles = "Admin,HRManager")]
     public async Task<IActionResult> UploadPhoto(int id, [FromForm]EmployeePhotoUploadDto model)
     {
             var result = await _employeeService.UploadPhotoAsync(id, model);
@@ -114,6 +121,7 @@ public class EmployeesApiController : ControllerBase
             });
     }
     [HttpGet("{id:int}/photo")]
+    [Authorize(Roles = "Admin,HRManager")]
     public async Task<IActionResult> GetPhoto(int id)
     {
             var result = await _employeeService.GetPhotoAsync(id);
@@ -126,6 +134,7 @@ public class EmployeesApiController : ControllerBase
             });
     }
     [HttpGet("{id:int}/contract/download")]
+    [Authorize(Roles = "Admin,HRManager")]
     public async Task<IActionResult> DownloadContract(int id)
     {
             var file = await _employeeService.DownloadContractAsync(id);
@@ -136,12 +145,14 @@ public class EmployeesApiController : ControllerBase
             );
     }
     [HttpDelete("{id:int}/photo")]
+    [Authorize(Roles = "Admin,HRManager")]
     public async Task<IActionResult> DeletePhoto(int id)
     {
             await _employeeService.DeletePhotoAsync(id);
             return NoContent();
     }
     [HttpPut("{id}/personnel-code")]
+    [Authorize(Roles = "Admin,HRManager")]
     public async Task<IActionResult> AssignPersonnelCode(
     int id,
     string personnelCode,
@@ -155,6 +166,7 @@ public class EmployeesApiController : ControllerBase
         return NoContent();
     }
     [HttpPut("transfer")]
+    [Authorize(Roles = "Admin,HRManager")]
     public async Task<IActionResult> 
         TransferEmployees(TransferEmployeesDto request,  CancellationToken cancellationToken)
     {
@@ -168,6 +180,7 @@ public class EmployeesApiController : ControllerBase
         });
     }
     [HttpGet("list")]
+    [Authorize(Roles = "Admin,HRManager")]
     public async Task<ActionResult<PagedResultDto<EmployeeListItemDto>>>
         GetListAsync([FromQuery] EmployeeListRequest request, CancellationToken cancellationToken)
     {
@@ -176,6 +189,7 @@ public class EmployeesApiController : ControllerBase
         return Ok(result);
     }
     [HttpGet("{id}/attendance")]
+    [Authorize(Roles = "Admin,HRManager,Employee")]
     public async Task<ActionResult<PagedResultDto<AttendanceDailyDto>>> GetEmployeeAttendance(
         int id,
         [FromQuery] AttendanceListRequestDto request,
@@ -187,6 +201,7 @@ public class EmployeesApiController : ControllerBase
         return Ok(result);
     }
     [HttpGet("{id:int}/shift-assignments")]
+    [Authorize(Roles = "Admin,HRManager")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<ShiftAssignmentDetailsDto>>>> 
         GetShiftAssignments(
             int employeeId,
@@ -203,6 +218,7 @@ public class EmployeesApiController : ControllerBase
         });
     }
     [HttpPost("{id:int}/shift-assignments")]
+    [Authorize(Roles = "Admin,HRManager")]
     public async Task<ActionResult<ApiResponse<ShiftAssignmentDetailsDto>>> 
         CreateShiftAssignment(
             int employeeId,
@@ -222,6 +238,7 @@ public class EmployeesApiController : ControllerBase
         });
     }
     [HttpGet("{id:int}/requests")]
+    [Authorize(Roles = "Admin,HRManager")]
     public async Task<ActionResult<ApiResponse<ShiftAssignmentDetailsDto>>>
         GetRequestById(
         int id,
@@ -235,6 +252,7 @@ public class EmployeesApiController : ControllerBase
         return Ok(result);
     }
     [HttpGet("{id:int}/assets")]
+    [Authorize(Roles = "Admin,HRManager")]
     public async Task<IActionResult> GetAssets(
     int id,
     CancellationToken cancellationToken)
@@ -247,6 +265,7 @@ public class EmployeesApiController : ControllerBase
         return Ok(result);
     }
     [HttpGet("{employeeId:int}/performance-reviews")]
+    [Authorize(Roles = "Admin,HRManager")]
     public async Task<IActionResult> GetEmployeePerformanceReviews(
         int employeeId,
         CancellationToken cancellationToken)
@@ -265,5 +284,22 @@ public class EmployeesApiController : ControllerBase
         };
 
         return Ok(response);
+    }
+    [Authorize(Roles = "Employee")]
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMyProfile(
+        CancellationToken cancellationToken)
+    {
+        var result = await _employeeService.GetMyProfileAsync(cancellationToken);
+
+        if(result == null)
+            return NotFound();
+
+        return Ok(new ApiResponse<EmployeeDetailsDto?>
+        {
+            Success = true,
+            Message = $"Employee ID: {result?.Id} has found",
+            Data = result
+        });
     }
 }

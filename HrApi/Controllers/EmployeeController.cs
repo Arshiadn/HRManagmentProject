@@ -1,5 +1,6 @@
 ﻿using HrApi.DTOs.Employees;
 using HrApi.Interfaces;
+using HrApi.Responses;
 using HrApi.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

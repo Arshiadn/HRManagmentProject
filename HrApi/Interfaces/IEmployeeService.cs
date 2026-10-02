@@ -21,4 +21,5 @@ public interface IEmployeeService
     Task AssignPersonnelCodeAsync(int id, string personnelCode, CancellationToken cancellationToken);
     Task TransferEmployeesAsync(TransferEmployeesDto request, CancellationToken cancellationToken);
     Task<PagedResultDto<EmployeeListItemDto>> GetListAsync(EmployeeListRequest request, CancellationToken cancellationToken);
+    Task<EmployeeDetailsDto?> GetMyProfileAsync(CancellationToken cancellationToken);
 }

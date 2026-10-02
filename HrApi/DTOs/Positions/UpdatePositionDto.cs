@@ -1,0 +1,12 @@
+using System;
+
+namespace HrApi.DTOs.Positions;
+
+public sealed class UpdatePositionDto
+{
+    public string Title { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+
+    public bool IsActive { get; set; }
+}

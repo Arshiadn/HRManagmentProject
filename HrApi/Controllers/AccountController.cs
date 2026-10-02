@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Client;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HrApi.Controllers;
 
@@ -17,18 +18,22 @@ public class AccountController : Controller
     {
         _accountService = accountService;
     }
+    [Authorize (Roles = "Admin")]
     [HttpGet]
     public IActionResult Register()
     {
         return View();
     }
     [HttpPost]
+    [Authorize (Roles = "Admin")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register(RegisterViewModel model)
+    public async Task<IActionResult> Register(RegisterViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
             return View(model);
-        var result = await _accountService.RegisterAsync(model);
+
+        var result = await _accountService.RegisterAsync(model, cancellationToken);
+
         if (result.IsSuccess)
         {
             return RedirectToAction("Index", "Home");
@@ -38,6 +43,7 @@ public class AccountController : Controller
         {
             ModelState.AddModelError(string.Empty,error);
         }
+
         return View(model);
     }
     [HttpGet]
